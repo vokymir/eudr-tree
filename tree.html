@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSS Decision Tree</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 40px;
+    text-align: center;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  /* ONLY the targeted slide is visible */
+  .slide:target {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+
+/* Show start slide when no hash is present */
+body:not(:has(.slide:target)) #start {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    background: #3b82f6;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+  }
+
+  .btn:hover {
+    background: #2563eb;
+  }
+</style>
+</head>
+<body>
+
+<div class="slide" id="start">
+  <h2>Do you like programming?</h2>
+  <a class="btn" href="#yes">Yes</a>
+  <a class="btn" href="#no">No</a>
+</div>
+
+<div class="slide" id="yes">
+  <h2>Frontend or Backend?</h2>
+  <a class="btn" href="#frontend">Frontend</a>
+  <a class="btn" href="#backend">Backend</a>
+</div>
+
+<div class="slide" id="no">
+  <h2>Maybe design or product?</h2>
+  <a class="btn" href="#design">Design</a>
+  <a class="btn" href="#pm">Product</a>
+</div>
+
+<div class="slide" id="frontend">
+  <h2>You like UI ✨</h2>
+  <a class="btn" href="#start">Restart</a>
+</div>
+
+<div class="slide" id="backend">
+  <h2>You like servers 🚀</h2>
+  <a class="btn" href="#start">Restart</a>
+</div>
+
+<div class="slide" id="design">
+  <h2>You love aesthetics 🎨</h2>
+  <a class="btn" href="#start">Restart</a>
+</div>
+
+<div class="slide" id="pm">
+  <h2>You like organizing chaos 📋</h2>
+  <a class="btn" href="#start">Restart</a>
+</div>
+
+</body>
+</html>

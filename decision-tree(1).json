@@ -1,0 +1,72 @@
+{
+  "start": {
+    "title": "Do you like coffe?",
+    "description": "Only truth.",
+    "answers": {
+      "yes": "like-coffe",
+      "no": "dont-like-coffe"
+    }
+  },
+  "like-coffe": {
+    "title": "What flavour of coffe?",
+    "description": "",
+    "answers": {
+      "black coffe": "black-coffe",
+      "latte": "latte",
+      "turek": "turek"
+    }
+  },
+  "dont-like-coffe": {
+    "title": "Tea or gin?",
+    "description": "",
+    "answers": {
+      "tea": "tea",
+      "gin": "gin"
+    }
+  },
+  "tea": {
+    "title": "",
+    "description": "",
+    "answers": {
+      "what are you": "otherman"
+    }
+  },
+  "gin": {
+    "title": "",
+    "description": "",
+    "answers": {
+      "what are you": "otherman"
+    }
+  },
+  "black-coffe": {
+    "title": "",
+    "description": "",
+    "answers": {
+      "what are you": "coffeman"
+    }
+  },
+  "latte": {
+    "title": "",
+    "description": "",
+    "answers": {
+      "what are you": "coffeman"
+    }
+  },
+  "turek": {
+    "title": "",
+    "description": "",
+    "answers": {
+      "what are you": "coffeman"
+    }
+  },
+  "coffeman": {
+    "title": "",
+    "description": "",
+    "answers": {}
+  },
+  "otherman": {
+    "title": "",
+    "description": "",
+    "answers": {}
+  }
+}

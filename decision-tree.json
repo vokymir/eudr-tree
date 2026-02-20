@@ -1,0 +1,14 @@
+{
+  "start": {
+    "title": "Start",
+    "description": "Root node",
+    "answers": {
+      "To finish": "end"
+    }
+  },
+  "end": {
+    "title": "Finish",
+    "description": "Final node",
+    "answers": {}
+  }
+}
