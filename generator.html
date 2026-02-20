@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic JSON Decision Tree</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Slide base styling */
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 40px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        /* Show the targeted slide */
+        .slide:target {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Setup screen styling */
+        #setup {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 20;
+            background: #111;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin: 0;
+            text-transform: capitalize;
+        }
+
+        p.desc {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            margin: 0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        textarea {
+            width: 90%;
+            max-width: 600px;
+            height: 350px;
+            background: #222;
+            color: #10b981;
+            border: 1px solid #444;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            border-radius: 6px;
+            resize: vertical;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="slide" id="setup">
+        <h2>Create Decision Tree</h2>
+        <p class="desc">Paste your JSON configuration below:</p>
+        <textarea id="json-input">
+            {
+            "start": {
+            "title": "Do you like coffee?",
+            "description": "Only truth.",
+            "answers": {
+            "yes": "like-coffee",
+            "no": "dont-like-coffee"
+            }
+            },
+            "like-coffee": {
+            "title": "What flavour of coffee?",
+            "description": "",
+            "answers": {
+            "black coffee": "black-coffee",
+            "latte": "latte",
+            "turek": "turek"
+            }
+            },
+            "dont-like-coffee": {
+            "title": "Tea or gin?",
+            "description": "",
+            "answers": {
+            "tea": "tea",
+            "gin": "gin"
+            }
+            },
+            "tea": {
+            "title": "",
+            "description": "",
+            "answers": {
+            "what are you": "otherman"
+            }
+            },
+            "gin": {
+            "title": "",
+            "description": "",
+            "answers": {
+            "what are you": "otherman"
+            }
+            },
+            "black-coffee": {
+            "title": "",
+            "description": "",
+            "answers": {
+            "what are you": "coffeman"
+            }
+            },
+            "latte": {
+            "title": "",
+            "description": "",
+            "answers": {
+            "what are you": "coffeman"
+            }
+            },
+            "turek": {
+            "title": "",
+            "description": "",
+            "answers": {
+            "what are you": "coffeman"
+            }
+            },
+            "coffeman": {
+            "title": "",
+            "description": "",
+            "answers": {}
+            },
+            "otherman": {
+            "title": "",
+            "description": "",
+            "answers": {}
+            }
+            }</textarea>
+        <button class="btn" onclick="generatePresentation()">Generate Presentation</button>
+    </div>
+
+    <div id="presentation-container"></div>
+
+    <script>
+        function generatePresentation() {
+            const jsonString = document.getElementById('json-input').value;
+
+            try {
+                const data = JSON.parse(jsonString);
+                const container = document.getElementById('presentation-container');
+                container.innerHTML = ''; // Clear previous slides if any
+
+                // Find the starting node (defaults to 'start' or the first key in the JSON)
+                let firstNodeId = 'start';
+                if (!data[firstNodeId]) {
+                    firstNodeId = Object.keys(data)[0];
+                }
+
+                // Loop through the JSON object and create HTML elements for each node
+                for (const [id, node] of Object.entries(data)) {
+                    const slide = document.createElement('div');
+                    slide.className = 'slide';
+                    slide.id = id;
+
+                    // Add Title (Fallback to the node ID if the title is empty in JSON)
+                    const h2 = document.createElement('h2');
+                    h2.textContent = node.title ? node.title : id.replace('-', ' ');
+                    slide.appendChild(h2);
+
+                    // Add Description (if it exists and isn't empty)
+                    if (node.description) {
+                        const p = document.createElement('p');
+                        p.className = 'desc';
+                        p.textContent = node.description;
+                        slide.appendChild(p);
+                    }
+
+                    // Add Buttons Wrapper
+                    const buttonsWrapper = document.createElement('div');
+                    buttonsWrapper.className = 'buttons';
+
+                    const answers = node.answers || {};
+                    const answerKeys = Object.keys(answers);
+
+                    if (answerKeys.length > 0) {
+                        // Create a button for each answer
+                        for (const [btnText, nextNodeId] of Object.entries(answers)) {
+                            const btn = document.createElement('a');
+                            btn.className = 'btn';
+                            btn.href = '#' + nextNodeId;
+                            btn.textContent = btnText;
+                            buttonsWrapper.appendChild(btn);
+                        }
+                    } else {
+                        // If there are no answers, it's an end-point. Add a restart button.
+                        const restartBtn = document.createElement('a');
+                        restartBtn.className = 'btn';
+                        restartBtn.href = '#' + firstNodeId;
+                        restartBtn.textContent = 'Start Over ↺';
+                        restartBtn.style.background = '#10b981'; // Make it visually distinct (green)
+                        buttonsWrapper.appendChild(restartBtn);
+                    }
+
+                    slide.appendChild(buttonsWrapper);
+                    container.appendChild(slide);
+                }
+
+                // Hide the setup screen and navigate to the first slide
+                document.getElementById('setup').style.display = 'none';
+                window.location.hash = '#' + firstNodeId;
+
+            } catch (error) {
+                alert("Invalid JSON format. Please check for missing quotes or commas.\n\nError details: " + error.message);
+            }
+        }
+    </script>
+
+</body>
+
+</html>

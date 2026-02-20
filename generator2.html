@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Tree Generator</title>
+    <style>
+        :root {
+            --bg: #111;
+            --panel: #1e1e1e;
+            --text: #f4f4f5;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --success-hover: #059669;
+            --border: #333;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Setup */
+        header {
+            padding: 20px 40px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Main Workspace */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Panel: Editor */
+        .editor-panel {
+            width: 40%;
+            min-width: 350px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .editor-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #a1a1aa;
+        }
+
+        textarea {
+            flex: 1;
+            background: #000;
+            color: #10b981;
+            border: 1px solid var(--border);
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            border-radius: 6px;
+            resize: none;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        /* Right Panel: Preview */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            position: relative;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #111;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 18px;
+            background: var(--primary);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn.secondary {
+            background: #3f3f46;
+        }
+
+        .btn.secondary:hover {
+            background: #52525b;
+        }
+
+        .btn.success {
+            background: var(--success);
+        }
+
+        .btn.success:hover {
+            background: var(--success-hover);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Decision Tree Generator</h1>
+        <div class="controls">
+            <button class="btn" onclick="updatePreview()">Refresh Preview</button>
+            <button class="btn success" onclick="exportHTML()">Export HTML</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="editor-panel">
+            <div class="editor-header">
+                <h2>JSON Configuration</h2>
+                <input type="file" id="file-upload" accept=".json" style="display:none;" onchange="loadJSONFile(event)">
+                <button class="btn secondary" style="padding: 6px 12px; font-size: 0.8rem;"
+                    onclick="document.getElementById('file-upload').click()">Upload .JSON</button>
+            </div>
+            <textarea id="json-input">
+                {
+                "start": {
+                "title": "Do you like coffee?",
+                "description": "Only truth.",
+                "answers": {
+                "yes": "like-coffee",
+                "no": "dont-like-coffee"
+                }
+                },
+                "like-coffee": {
+                "title": "What flavour of coffee?",
+                "description": "",
+                "answers": {
+                "black coffee": "black-coffee",
+                "latte": "latte",
+                "turek": "turek"
+                }
+                },
+                "dont-like-coffee": {
+                "title": "Tea or gin?",
+                "description": "",
+                "answers": {
+                "tea": "tea",
+                "gin": "gin"
+                }
+                },
+                "tea": {
+                "title": "",
+                "description": "",
+                "answers": {
+                "what are you": "otherman"
+                }
+                },
+                "gin": {
+                "title": "",
+                "description": "",
+                "answers": {
+                "what are you": "otherman"
+                }
+                },
+                "black-coffee": {
+                "title": "",
+                "description": "",
+                "answers": {
+                "what are you": "coffeman"
+                }
+                },
+                "latte": {
+                "title": "",
+                "description": "",
+                "answers": {
+                "what are you": "coffeman"
+                }
+                },
+                "turek": {
+                "title": "",
+                "description": "",
+                "answers": {
+                "what are you": "coffeman"
+                }
+                },
+                "coffeman": {
+                "title": "",
+                "description": "",
+                "answers": {}
+                },
+                "otherman": {
+                "title": "",
+                "description": "",
+                "answers": {}
+                }
+                }</textarea>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-label">Live Preview</div>
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </main>
+
+    <script>
+        // Simple HTML escaper to prevent user input from breaking the layout
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        // Core function: Parses JSON and builds the standalone HTML code
+        function generateAppHTML() {
+            const jsonString = document.getElementById('json-input').value;
+            let data;
+
+            try {
+                data = JSON.parse(jsonString);
+            } catch (error) {
+                alert("Invalid JSON format. Please check for syntax errors.\n\n" + error.message);
+                return null;
+            }
+
+            let firstNodeId = 'start';
+            if (!data[firstNodeId]) {
+                firstNodeId = Object.keys(data)[0];
+            }
+
+            let slidesHTML = '';
+
+            // Build the HTML for each slide
+            for (const [id, node] of Object.entries(data)) {
+                const titleText = node.title ? node.title : id.replace(/-/g, ' ');
+                const title = escapeHTML(titleText);
+                const desc = escapeHTML(node.description);
+
+                let buttonsHTML = '<div class="buttons">';
+                const answers = node.answers || {};
+                const answerKeys = Object.keys(answers);
+
+                if (answerKeys.length > 0) {
+                    for (const [btnText, nextNodeId] of Object.entries(answers)) {
+                        buttonsHTML += `<a class="btn" href="#${escapeHTML(nextNodeId)}">${escapeHTML(btnText)}</a>`;
+                    }
+                } else {
+                    // End node - Add restart button
+                    buttonsHTML += `<a class="btn restart" href="#${escapeHTML(firstNodeId)}">Start Over ↺</a>`;
+                }
+                buttonsHTML += '</div>';
+
+                slidesHTML += `
+<div class="slide" id="${escapeHTML(id)}">
+  <h2 style="text-transform: capitalize;">${title}</h2>
+  ${desc ? `<p class="desc">${desc}</p>` : ''}
+  ${buttonsHTML}
+</div>`;
+            }
+
+            // The CSS for the exported presentation
+            const css = `
+      body { margin: 0; font-family: Arial, sans-serif; background: #111; color: white; overflow: hidden; }
+      .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 40px; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+      .slide:target { opacity: 1; pointer-events: auto; z-index: 10; }
+
+      /* Magic selector to show the first slide when there is no hash in the URL */
+      body:not(:has(.slide:target)) #${escapeHTML(firstNodeId)} { opacity: 1; pointer-events: auto; z-index: 10; }
+
+      h2 { font-size: 2rem; margin: 0; }
+      p.desc { font-size: 1.2rem; color: #a1a1aa; margin: 0; max-width: 600px; }
+      .buttons { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+      .btn { padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-size: 1rem; transition: background 0.2s ease; border: none; cursor: pointer; }
+      .btn:hover { background: #2563eb; }
+      .btn.restart { background: #10b981; }
+      .btn.restart:hover { background: #059669; }
+    `;
+
+            // The final complete HTML string
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree</title>
+<style>${css}</style>
+</head>
+<body>
+${slidesHTML}
+</body>
+</html>`;
+        }
+
+        // Inject the generated HTML into the iframe via srcdoc
+        function updatePreview() {
+            const html = generateAppHTML();
+            if (html) {
+                document.getElementById('preview-frame').srcdoc = html;
+            }
+        }
+
+        // Read uploaded file
+        function loadJSONFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('json-input').value = e.target.result;
+                updatePreview(); // Auto-update preview on upload
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // Reset input so same file can be uploaded again if needed
+        }
+
+        // Download the generated HTML as a file
+        function exportHTML() {
+            const html = generateAppHTML();
+            if (!html) return;
+
+            const blob = new Blob([html], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'decision-tree.html';
+            document.body.appendChild(a);
+            a.click();
+
+            // Cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize the preview on load
+        window.onload = updatePreview;
+
+    </script>
+
+</body>
+
+</html>
