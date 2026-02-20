@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeCraft — Decision Tree Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080810;
+            --surface: #10101e;
+            --surface2: #18182a;
+            --border: #28284a;
+            --border2: #38386a;
+            --accent: #7c6dff;
+            --accent-glow: rgba(124, 109, 255, 0.18);
+            --red: #ff5f7e;
+            --green: #4dcc88;
+            --gold: #ffd166;
+            --text: #d8d8f0;
+            --text-dim: #5a5a90;
+            --text-mid: #9090b8;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+            --node-w: 220px;
+            --r: 10px;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── HEADER ── */
+        header {
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: -0.03em;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .logo-sub {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .h-sep {
+            width: 1px;
+            height: 22px;
+            background: var(--border);
+            margin: 0 3px;
+            flex-shrink: 0;
+        }
+
+        .h-spacer {
+            flex: 1;
+        }
+
+        .hbtn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-mid);
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .hbtn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .hbtn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .hbtn.primary:hover {
+            background: #9484ff;
+        }
+
+        .hbtn.green {
+            border-color: #2a5a3a;
+            color: var(--green);
+        }
+
+        .hbtn.green:hover {
+            background: rgba(77, 204, 136, 0.1);
+            border-color: var(--green);
+        }
+
+        .hbtn.gold {
+            border-color: #5a4a1a;
+            color: var(--gold);
+        }
+
+        .hbtn.gold:hover {
+            background: rgba(255, 209, 102, 0.1);
+            border-color: var(--gold);
+        }
+
+        /* ── LAYOUT ── */
+        main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ── CANVAS ── */
+        #canvas-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg);
+            background-image: radial-gradient(circle, rgba(38, 38, 68, 0.9) 1px, transparent 1px);
+            background-size: 26px 26px;
+        }
+
+        #canvas-transform {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6000px;
+            height: 6000px;
+            transform-origin: 0 0;
+        }
+
+        #svg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6000px;
+            height: 6000px;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* ── NODES ── */
+        .node {
+            position: absolute;
+            width: var(--node-w);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            cursor: grab;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.12s, box-shadow 0.12s;
+        }
+
+        .node:hover {
+            border-color: var(--border2);
+        }
+
+        .node.selected {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        .node.nstart {
+            border-color: rgba(255, 209, 102, 0.5);
+        }
+
+        .node.nstart .nhead {
+            background: rgba(255, 209, 102, 0.05);
+        }
+
+        .node.nterm {
+            border-color: rgba(77, 204, 136, 0.4);
+        }
+
+        .node.nterm .nhead {
+            background: rgba(77, 204, 136, 0.05);
+        }
+
+        .nhead {
+            padding: 9px 10px 8px;
+            border-bottom: 1px solid var(--border);
+            border-radius: calc(var(--r) - 1.5px) calc(var(--r) - 1.5px) 0 0;
+        }
+
+        .nbadge {
+            font-family: var(--mono);
+            font-size: 0.57rem;
+            color: var(--text-dim);
+            margin-bottom: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nstart .nbadge {
+            color: rgba(255, 209, 102, 0.6);
+        }
+
+        .nterm .nbadge {
+            color: rgba(77, 204, 136, 0.6);
+        }
+
+        .ntitle {
+            font-size: 0.77rem;
+            font-weight: 600;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .ntitle.empty {
+            color: var(--text-dim);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .nbody {
+            padding: 7px 8px 5px;
+        }
+
+        .nans {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .npill {
+            flex: 1;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            border: 1px solid;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .nadd {
+            display: flex;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 3px 2px;
+            border-radius: 3px;
+            transition: color 0.12s;
+        }
+
+        .nadd:hover {
+            color: var(--accent);
+        }
+
+        /* ── RIGHT PANEL ── */
+        #right-panel {
+            width: 380px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+
+        .tabs::-webkit-scrollbar {
+            height: 0;
+        }
+
+        .tab {
+            padding: 10px 12px;
+            font-family: var(--mono);
+            font-size: 0.63rem;
+            cursor: pointer;
+            color: var(--text-dim);
+            border-bottom: 2px solid transparent;
+            transition: all 0.12s;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text-mid);
+        }
+
+        .pane {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .pane.active {
+            display: flex;
+        }
+
+        /* ── NODE EDITOR ── */
+        #ned {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .neempty {
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 60px 20px;
+            line-height: 2.2;
+        }
+
+        .neempty big {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+
+        .neg {
+            margin-bottom: 12px;
+        }
+
+        .nelabel {
+            font-family: var(--mono);
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nelabel-tok {
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(124, 109, 255, 0.25);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 0.55rem;
+        }
+
+        .neinput,
+        .neselect,
+        .netarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 6px 9px;
+            font-family: var(--mono);
+            font-size: 0.71rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.12s;
+        }
+
+        .neinput:focus,
+        .neselect:focus,
+        .netarea:focus {
+            border-color: var(--accent);
+        }
+
+        .neinput[readonly] {
+            color: var(--text-dim);
+            cursor: default;
+            background: var(--surface);
+        }
+
+        .neselect {
+            cursor: pointer;
+        }
+
+        .netarea {
+            resize: vertical;
+            min-height: 48px;
+            line-height: 1.5;
+        }
+
+        .nesec {
+            display: flex;
+            align-items: center;
+            margin: 16px 0 9px;
+            font-family: var(--mono);
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            gap: 8px;
+        }
+
+        .nesec-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .acard {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 8px;
+            margin-bottom: 7px;
+        }
+
+        .acard-top {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .adot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .adel {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 1rem;
+            flex-shrink: 0;
+            transition: all 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .adel:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 95, 126, 0.1);
+        }
+
+        .addansbtn {
+            width: 100%;
+            padding: 7px;
+            background: transparent;
+            border: 1px dashed var(--border2);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            margin-bottom: 10px;
+        }
+
+        .addansbtn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .delnodebtn {
+            width: 100%;
+            padding: 7px;
+            background: rgba(255, 95, 126, 0.05);
+            border: 1px solid rgba(255, 95, 126, 0.2);
+            border-radius: 6px;
+            color: var(--red);
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            margin-top: 14px;
+        }
+
+        .delnodebtn:hover {
+            background: rgba(255, 95, 126, 0.14);
+            border-color: var(--red);
+        }
+
+        /* ── JSON ── */
+        #json-area {
+            flex: 1;
+            background: #05050d;
+            border: none;
+            resize: none;
+            font-family: var(--mono);
+            font-size: 0.69rem;
+            line-height: 1.65;
+            color: #88aaee;
+            padding: 14px 16px;
+            outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        #json-area.err {
+            color: var(--red) !important;
+        }
+
+        .pfooter {
+            padding: 7px 10px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ── PREVIEW ── */
+        #preview-frame {
+            flex: 1;
+            border: none;
+            background: #000;
+        }
+
+        /* ── TEMPLATE EDITOR ── */
+        #tpl-ed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .tsec {
+            margin-bottom: 20px;
+        }
+
+        .tsec-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 9px;
+            font-family: var(--mono);
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .tsec-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .tsec-add {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            cursor: pointer;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--text-dim);
+            transition: all 0.12s;
+            flex-shrink: 0;
+        }
+
+        .tsec-add:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* CSS var row */
+        .tvar-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .tvar-label {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-mid);
+            width: 96px;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        input.tvar-color {
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 2px;
+            background: var(--surface2);
+        }
+
+        input.tvar-val {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 7px;
+            font-family: var(--mono);
+            font-size: 0.62rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.12s;
+            min-width: 0;
+        }
+
+        input.tvar-val:focus {
+            border-color: var(--accent);
+        }
+
+        input.tvar-key {
+            width: 90px;
+            flex-shrink: 0;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 7px;
+            font-family: var(--mono);
+            font-size: 0.62rem;
+            color: var(--text-mid);
+            outline: none;
+            transition: border-color 0.12s;
+        }
+
+        input.tvar-key:focus {
+            border-color: var(--accent);
+        }
+
+        .tvar-del {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.12s;
+        }
+
+        .tvar-del:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 95, 126, 0.1);
+        }
+
+        /* Custom field row */
+        .tfield-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .tfield-row input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 5px 7px;
+            font-family: var(--mono);
+            font-size: 0.63rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.12s;
+            min-width: 0;
+        }
+
+        .tfield-row input:focus {
+            border-color: var(--accent);
+        }
+
+        .tfield-id {
+            width: 100px;
+            flex-shrink: 0;
+            color: var(--accent) !important;
+        }
+
+        .tfield-label {
+            flex: 1;
+        }
+
+        .tfield-note {
+            font-family: var(--mono);
+            font-size: 0.57rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        /* Token chips */
+        .tokens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 7px;
+        }
+
+        .tok {
+            font-family: var(--mono);
+            font-size: 0.59rem;
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(124, 109, 255, 0.25);
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+            user-select: all;
+            -webkit-user-select: all;
+            transition: background 0.12s;
+        }
+
+        .tok:hover {
+            background: rgba(124, 109, 255, 0.28);
+        }
+
+        .tok.secondary {
+            color: var(--gold);
+            background: rgba(255, 209, 102, 0.08);
+            border-color: rgba(255, 209, 102, 0.2);
+        }
+
+        /* Template textareas */
+        .ttpl {
+            width: 100%;
+            min-height: 88px;
+            background: #05050d;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 8px 9px;
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            color: #aaddff;
+            outline: none;
+            resize: vertical;
+            line-height: 1.6;
+            transition: border-color 0.12s;
+        }
+
+        .ttpl:focus {
+            border-color: var(--accent);
+        }
+
+        /* ── CANVAS TOOLBAR ── */
+        #ctb {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 6px 14px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+            z-index: 50;
+        }
+
+        .ctbsep {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            margin: 0 3px;
+        }
+
+        .ctbbtn {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-family: var(--mono);
+            font-size: 0.64rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-mid);
+            transition: all 0.12s;
+        }
+
+        .ctbbtn:hover {
+            background: var(--surface2);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .ctbbtn.ac {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .ctbbtn.ac:hover {
+            background: #9484ff;
+        }
+
+        .zoomlbl {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            min-width: 38px;
+            text-align: center;
+        }
+
+        /* ── NOTIF ── */
+        #notif {
+            position: fixed;
+            bottom: 16px;
+            right: 400px;
+            background: var(--surface2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            padding: 7px 14px;
+            border-radius: 6px;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: all 0.22s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #notif.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── DIALOG ── */
+        #dlg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #dlg.open {
+            display: flex;
+        }
+
+        .dlgbox {
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            padding: 22px;
+            width: 300px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .dlgbox h3 {
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        .dlgbtns {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">⬡ TreeCraft <span class="logo-sub">editor</span></div>
+        <div class="h-sep"></div>
+        <button class="hbtn" onclick="importJSON()">⬆ Import</button>
+        <button class="hbtn green" onclick="exportJSON()">⬇ JSON</button>
+        <button class="hbtn gold" onclick="exportHTML()">⬇ HTML</button>
+        <div class="h-spacer"></div>
+        <button class="hbtn primary" onclick="showDlg()">＋ Add Node</button>
+    </header>
+
+    <main>
+        <div id="canvas-wrap">
+            <div id="canvas-transform">
+                <svg id="svg-layer"></svg>
+            </div>
+            <div id="ctb">
+                <button class="ctbbtn ac" onclick="showDlg()">＋ Node</button>
+                <div class="ctbsep"></div>
+                <button class="ctbbtn" onclick="resetLayout()">⟳ Auto-layout</button>
+                <button class="ctbbtn" onclick="fitView()">⊡ Fit</button>
+                <div class="ctbsep"></div>
+                <button class="ctbbtn" onclick="zoomBy(1.15)">＋</button>
+                <span class="zoomlbl" id="zlbl">100%</span>
+                <button class="ctbbtn" onclick="zoomBy(0.87)">－</button>
+            </div>
+        </div>
+
+        <div id="right-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="editor" onclick="switchTab('editor')">Node Editor</div>
+                <div class="tab" data-tab="json" onclick="switchTab('json')">JSON</div>
+                <div class="tab" data-tab="template" onclick="switchTab('template')">Template</div>
+                <div class="tab" data-tab="preview" onclick="switchTab('preview')">Preview</div>
+            </div>
+
+            <!-- Node Editor -->
+            <div class="pane active" data-tab="editor">
+                <div id="ned">
+                    <div class="neempty"><big>⬡</big>Click a node<br>to select and edit it</div>
+                </div>
+            </div>
+
+            <!-- JSON -->
+            <div class="pane" data-tab="json">
+                <textarea id="json-area" spellcheck="false"></textarea>
+                <div class="pfooter">
+                    <button class="hbtn" onclick="copyJSON()">Copy</button>
+                    <button class="hbtn" onclick="applyJSON()">Apply</button>
+                    <button class="hbtn" onclick="fmtJSON()">Format</button>
+                </div>
+            </div>
+
+            <!-- Template Editor -->
+            <div class="pane" data-tab="template">
+                <div id="tpl-ed">
+                    <!-- rendered by renderTplTab() -->
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="pane" data-tab="preview">
+                <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+                <div class="pfooter">
+                    <span style="flex:1;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim)">Live HTML
+                        preview</span>
+                    <button class="hbtn gold" onclick="exportHTML()">⬇ Export</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Node Dialog -->
+    <div id="dlg">
+        <div class="dlgbox">
+            <h3>New Node</h3>
+            <div class="neg">
+                <div class="nelabel">Node ID (slug)</div>
+                <input class="neinput" id="dlg-id" placeholder="e.g. my-question" oninput="slugify(this)">
+            </div>
+            <div class="neg">
+                <div class="nelabel">Title</div>
+                <input class="neinput" id="dlg-title" placeholder="Question text…">
+            </div>
+            <div class="dlgbtns">
+                <button class="hbtn" onclick="closeDlg()">Cancel</button>
+                <button class="hbtn primary" onclick="confirmAdd()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notif"></div>
+
+    <script>
+        // ═══════════════════════        ═════════════════════ ══
+        // STAT E
+        // ═════ ══════════ ═══════════            ═════════
+        let tree = {};
+        let p os = {};
+l et selId = drag = nul l;
+        let tf = {x: 60, y: 60, s: 1};
+        let _jpause = false;
+
+        // Template state         – stored         in tree._template on export
+        let tmpl = {
+            cssVars: [
+                {y: '--bg ', label: 'Background', val: ' #09090f'},
+                {
+                    key: ' --text', label: 'Bo dy text', val: #d8d8f0' },
+     {key: '--font', label: 'F ont family', val: "'S egoe UI', system -ui, sans-serif "},
+     {key: '--h2', la            l: 'Heading', val: '#eeeeff'},
+                {key: '-- sub ', label: 'Subt ext', al: '# 6060a0'},
+                {key: '--bt n-bg', la bel: 'Button  BG', val: 'rgba(124,109            55,0.1 )'},
+                {key: '--btn-color', label: 'Butto n t ext', val: '#aaaaf8'},
+                {
+                    key: -btn - border',   label: 'B utton border',     val : 'rgba(124, 10 9, 2 55, 0.25)'  },
+    {key: '-- btn-hover', bel: 'Bu tton hove r BG', val: 'rgba(1 24,109,255,0.2 5)'},
+    {key: '--res', label: 'R            ult text ', val: '#eeeeff'},
+                {key: '--res-s ub', labe l: 'Result subtex t', val: '#            50a0'},
+            ],
+            qTpl: `<h2>{title}</h2>\n<p cla ss="sub">{desc ription}</p>\n<div class= "ch">{answ ers}<            iv>`,
+            rTp l: `<div  class="res">{title}</div>\n<p c lass="rsub">{d escription}</p>\n<button cla ss="btn se c" o        ncli        ck="go('start')">&#x21A9; Start over</button>`,
+        };
+
+            nst NW = 220, NH_HEAD = 54, NBPAD = 7, ANH = 8, ADDH = 24;
+            nst C = ['#7c            ff', '#ff5f7e', '#            d166', '#4dcc88', '#ff        9f43',
+            '#a29bfe', '#fd79a8', '#74b        9ff', '#55e        fc4', '#e17055',
+            '#00cec9', '#6c5c        e7', '#fab1a0', '#fdcb6e']
+        const DEFAULT = {
+            "start": {
+                "titl            :"Do you like coffee?","description":"Only truth.","answers":            yes": "like-coffee", o":"dont - like - coffee"}},
+  "like-coffee":{"tit            ":"What flavour of                 ee?", "description":"", "answ                :{"black coffee":"black-coff                "latte": "latte", "t                ": "turek"}},
+        "dont-like-coffee": {"title": "Tea or gin?", "descr                    ": "", "answers": {"tea": "tea", "gn": "gin"} },
+        "tea": {"ti tle": " T ea tme            ", escription":"","answers":{            hat are yo            ": "otherman"}},
+        "gin": {
+            "title": "Gin time 🍸", cription":"","answers":{"what                 you ? ":"otherman"}},
+            "                k-coffee": {
+                "titl e": "Black coffee ☕", "descri p tion": "", "ans w ers": {            ha            are you ? ":"co            eman"}},
+                    "latte": {
+                        "title": "Latte l                 ☕", "descriptio": "", "answers ": {
+                            "wh at are  yo u?":co        ffe        man"}},
+                            "turek": {"t            le": "Turek devotee ☕", "description": "", "answers": {" what are y            ?": "coffeman"} },
+                            "co f feman": {"title": "You are a coffee person!", "desc        rip        tion": "Life runs on espresso.", "answers": { } },
+                            "othe        rman": {"title": "You are not a coffee person        !", "description": "Tea nd gin are fine too.", "answers": { } }
+                        };
+
+                        window.addEventListener'DO        MContentLoaded', () => {
+                            tree = JSON.parse(JSON.string        ify(DEFAULT));
+                            autoLayout();
+                            renderAll();
+  fit        View(false);
+                            setupEvents;
+                        });
+
+// ════════════════════════════ ══ ═════════════            ═
+// HELPERS — skip _meta keys
+// ══════════                ════════════════════════════════
+fun ct ion  nod eE ntries()             return Object.e        ntr        ies(tree).filter(([k]) => !k            tartsWith('_'));
+                    }
+                    function nodeIds() {return Object.keys(tree).filte r(k => !k.artsWith('_'));}
+                    function fields() {            eturn tree._fields || [];}
+
+                    // ════ ═ ═══ ═ ════ ═ ════════ ═ ═══ ═ ══════ ═ ═══════════ ═
+                    // L            OUT
+                    // ═════════════            ═══════════════════════════════
+                    function autoLayo() {
+                        const lvls = {}, see = new Set();
+                        const ids = nodeIds();
+                        const root = id s. in es('sta r t') ? 'start' : [0];
+                        if (!root) return;
+                        const q = [{id: root, l: 0}]; seen.add(root);
+                        while (q.length) {
+                            const {id, l} = q.shift();
+                            if (!lvls[l]) lvls[l] = [];
+                            lvls[l].pus            id);
+                            if (tree[id]) for (const t of Object.values(tree[id].answers || {}))
+                                if (!seen.has(t) && tr e e[t]) {seen.add(t); q.p ush({id: t, l: l + 1});}
+                        }
+                        const CW = 290, RH = 210;
+   p os = {};
+                        for (co nst[l, nids] of Object.entries(lvls)) {
+                            const tot = nids.length * RH, sy = 700 - tot / 2;
+                            nids.forEach((id, i) => pos[id] = {x: 80 + +            CW, y: sy + i * RH});
+                        }
+                        let oy = 60;
+                        (const id o f i ds) if (!po                ]) {pos[id] = {x: 60, y}; oy += 180;}
+                    }
+
+                    function nodeH(id) {
+                        const n = tree[id]; i(                return NH_HEAD + AD * 2 + ADDH;
+  retu rn  NH_ HEAD + NBP AD * 2 + Object.ke ys(n.an swers |                .length * ANH + ADDH;
+                    }
+
+                    //             ════            ═══════════        ═══        ════════════════════════
+                    /            RENDE R ALL
+                    // ═════════════════════════════════════════            ═══
+                    function renderAll() {renderCanvas(); renderJS            Area(); renderPr eview(); renderNED();}
+
+                    const                = document.getElementBy Id('canvas-trans                ');
+                    const SVG = document.getElementById(-layer');
+
+function ren                anvas() {
+                        CT.quer ySele ct or Al                    de').forEach(n=>n.remov e());
+  for(c                    id, d]of nod e Entries())                     endChild(mkNode(id, d,                     ]|| {x: 10 0 , y: 1 0 0}));
+    ren d erArrow s();
+                }
+
+ f unc t ion   mkN, d, p) {
+  co is S = i d == = 'st                    isT = !Obj e ct.keys(d.a n swers||{} ) .length, isS el =   id===se                     const el   = document.createElement('div');
+                    el.cl assNam                    ode'+(is S ?' nstart':'')+(isT?' nterm':'')+(isSe l?' se                    ':'');
+                    el.dataset.id = id;
+                    el.s tyle.cssText = `left:${p.x}px;t op:${p                    ;
+                    const title = d.tit le|| ' ';
+                    const ansHtml = Ob ject.entries(d.answers || {}).ma p(([a, t], cons t  c = C[i % C.length];
+                    return `<div class="n ans"><div class="npill" style="color:${c} ;bor                    lor:${c}28;background:${c}10" title="${ea(${ea(t)}"> $ {eh(a)}</div></
+  }).join('');
+  el.i nnerHTML = `
+                        < d i v class="nhead" >
+       <div class="nbadge">$                    ▶ START — ':''}${isT?'● RES ULT  — ':''}${id}</div>
+      <div cl ass="nti                    title?' empty':''}">${eh( title)|| '(no title)'}</div>
+    </di v >
+                        <                    ass="nbody" > ${ansHtml} <div clas s="nadd" data-add                    {id}">＋ add answer</div                    >`;
+                    el.add E ven t Liste n er('mousedow n', e =                      if (e.button !== 0) r e tu r n; e.stopPro pag a tion();
+                    if                    rget.clo s est('[dat a -ad d ans]                    quickAdd ( id); return; }
+                    lectNode(id);
+    _d ra g = {t ype: 'node', id, sx: e.clie nt X, sy: e                    tY, nx: p.x, ny: p.y};
+    C T.st yle.cursor = 'grabbing';
+                });
+                     n el;
+            }
+
+            function ren der Arrows() {
+                while (SVG.firstChild) SVG.remove                    SVG.firstChild);
+  co                    fs = svg e l('defs'); SVG.Child(defs);
+                for (cons t[sid, d] of nodeEnt ries(                       const sp = pos[sid]; if (!sp) continue;
+                Object.entries(d.answe rs || {}                    ach(([ans, tid], i) => {
+      con st tp = pos[tid]; if (!tp) ret                         const c = C[i % C.le ngt h], th = nodeH(tid);
+                    const sx                    NW, sy = sp.y + NH _ HEAD+NBPAD + i * ANH + ANH / 2;
+                  con             t        x = t        p.x, ty = tp.y + t h / 2;
+                    const dist = Math.abs(tx - sx), bend = Math.max(65, dist * 0 .42);
+                    const mid = ` ar            ${sid}_${i}`.repla c e(/[^a-z0-9_]/g, '_');
+                    const mk = svgel('marke            ); mk.setAttribute('id',mid);
+                    ['marke r Width', 'markerH e ight ', 'ref        X', 'refY'].forEach((a, j) => mk.setAttribute(a, ['        8', '6', '7', '3'][j]));
+                    mk.setAttribute('orient', 'auto');
+                    const pl = s            el('polygo n '); pl.setAttribute('points', '0 0, 8 3,             6'); pl.setAttribute('fill', c);
+         m                pe ndChild(p l); defs.appen                ld(mk);
+                    const path = svgel('pat
+        p                    tAttr i bute(' d', `M${sx} $ {sy} C${sx + be nd} ${sy}, ${t x- ben d}  ${ty},$                    {ty} `);
+      pat h .setAttribut                    ok e',c);  path.s e tAttr ibute('stroke-width','1.5');
+      path.setAttribute( 'f ill','none'); path.setAttribute( 'opacity','0.5                                pa            .setAttribute('marker-end',`url(#${mid})` );                    SVG.appendChild(                );
+      cons t l x=(sx+t x)                    =Math.mi n (sy,ty)-7;
+       con s t ls=ans . length>17? a ns.slice( 0 ,15)+'                    , lw=ls. l ength*5. 4 +10;
+        cons t  bg=                    'rect');
+        [' x', 'y ','wi                    height', ' rx','fill'].forEach((a,j)=>bg.setAttribute(a,[lx-l                    -1 1,lw ,14,3,'rgba(6, 6 ,1 4 ,0.85 )'][j]));
+          SVG.app                    ld(bg);
+      co                lb=svgel( 'text');
+        lb.setAt tr                    'x', l x); lb.s e tAttribute ( 'y',ly); lb                    trib u te('text - anchor','m i ddle');
+                       setAttribut                on            size            '9'); lb.setAttribute('font-family', 'J et Br                 Mono , monosp                );
+      lb.setAttribute('fill',c); lb.setAttribute ( 'opa                ','0.85');
+        lb.            xtCo            ent=ls; SVG.appendChild(lb);
+       })                }
+}
+
+function svgel(                eturn d o cument.c r e a teEl e mentN                ttp://ww w .w3.org/200 0/svg',t);}
+fu ncti o n app                (){
+  C T .style.transform=`translate(${}px, ${tf .y}px) sca l e(${tf.s})` ;
+  docum e nt.getE                ntBy I d( ' zlb l ').te x tCo n tent=Ma                ound ( tf . s*1 0 0)+'% ' ;
+}
+
+// ═══                ════ ═ ═══════════════            ══ ═════════ ══════
+//         CA        NVAS EVENTS
+// ═══ ═════ ═ ═══════════ ══════════════ ════ ═ ════ ═══
+function         setupEvents() {
+  con s t wra p=            cument.get E lementById('canvas-wrap');
+  wrap.addEve            Listener( ' mousedown',e=>{
+     if(e.button!==0) retur
+    i f (!e.targe t. c losest('. no d e')){
+        _ drag={type:            anv as',sx:e.clientX, sy:e.cli e ntY,tx:t f . x,ty:tf.y} ;
+        wrap.st yle.c ur s or='grabbing ';
+         if(selId){s elI d =nul l; d ocument.quer ySe l ector            l('.nod e .selected').forEa c h (n=>n.classList.re mo v e('s            ected') ) ;renderNED(); }
+    }
+  });
+   document. a dd E ve n tLi s tene r( ' mo u se m ove ' ,e=>{
+              if(! _ dr ag)  r et u rn ;
+     i f (_ d ra g .t ype==='node        '){
+      const dx=(e.clientX-_drag.sx)/tf.s,         dy=(e.clie        ntY-_drag.sy)/tf.s;
+      const nx=_drag.nx        +dx, ny=_drag.ny+dy;
+                 pos[_ d rag.            ]={x:nx,y:ny};
+      const el=CT.querySelect or (`.node[data - id= "${_drag.id}"]`);
+      if (el ){el.s            le.left=nx+'px';el.style.top=ny+'p        x';        }
+      renderArrows();
+    } else {
+              tf.x=_drag.tx+(        e.clientX-_drag.sx);
+      tf.y=_drag.ty+(e        .clientY-_drag.sy);
+                 applyT F ();
+    }
+  });
+  document.addEv            tL istener (' mouseup',()=> {
+                _drag=null;
+      document.getElementById('canvas-wrap').style.cursor='';
+    CT.style.cursor='';
+                    wrap.a            Ev            tListene r ('wheel', e =>{
+    e.            eventDefau l t();
+    const f=e.deltaY<0?            12:0.9, ns=M a th.min(3,Math.max(0            8,tf.s*f));
+      const r=wrap.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    tf.x=mx-(mx-tf.x)*(ns/tf.s); tf.y=my-(my-tf.y)*(ns/tf.s); tf.s=ns; applyTF();
+  },{passive:false});
+}
+
+function zoomBy(f){tf.s=Math.min(3,Math.max(0.18,tf.s*f));applyTF();}
+
+function fitView(){
+  const wrap=document.getElementById('canvas-wrap'), ids=Object.keys(pos);
+  if(!ids.length) return;
+  let mx=Infinity,my=Infinity,Mx=-Infinity,My=-Infinity;
+  for(const id of ids){const p=pos[id],h=nodeH(id);mx=Math.min(mx,p.x);my=Math.min(my,p.y);Mx=Math.max(Mx,p.x+NW);My=Math.max(My,p.y+h);}
+  const W=wrap.clientWidth,H=wrap.clientHeight,pd=70;
+  tf.s=Math.min(1.5,Math.max(0.15,Math.min((W-pd*2)/(Mx-mx),(H-pd*2)/(My-my)) ));
+   t f.                tf.s; t f .y= p d-my*tf.s;                 );
+}
+
+// ═ ═ ══════════════ ══ ════════════════════════════
+//   S ELECTION
+//   ════════════════════════════════                ══════
+function selectNode(id){
+  selId=id;
+  document.querySelectorAll('.node').forEach(n=>n.classList.to g gle('selected',n.dataset.id===id));
+  renderNED(); switchTab('editor');
+}
+
+// ══════════════════════════════════════════════
+// NODE EDITOR
+// ══════════════════════════════════════════════
+function renderNED(){
+  const el=document.getElementById('ned');
+  if(!selId||!tree[selId]){
+    el.innerHTML='<div class="neempty"><big>⬡</big>Click a node<br>to select and edit it</div>';
+    return;
+  }
+  const id=selId, nd=tree[id];
+  const ansl=Object.entries(nd.answers||{});
+  const allIds=nodeIds();
+  const flds=fields();
+
+  // Build custom fields s
+  const customFldHtml = flds.length ? `
+                < div class="nesec" > Custom fields < div class="nesec-line" ></div ></div >
+                    ${
+                flds.m ap(f => `
+      <div class="neg">
+        <div class="nelabel">${eh(f.label)} <span class="nelabel-tok" > {${f.id}}        </s        pan></div>
+        <input class="neinput" v        alue="${ea(nd[f.id] || '')}" placeholder="${ea(f.label)}…"
+          onch an ge ="u f('${id}',' ${f.id} ',this.valu e )" >
+      </div>`).join('')
+            }
+            ` :  '';
+
+  el.innerHTML        =`
+                < div class=" neg" ><div  class= "n            ab el">Node ID< /div><in            t class = "neinput" value="${ea(id)}" readonl            </ div>
+     <div c lass="ne            >
+      <d iv  c lass="ne            bel">Ti t le /  Qu esti o n <s p an cla s s="nel abe l - to k ">{tit l e}</            an></di v >
+                < input cla ss = "n ei nput " i d = " n e - t"   v alu e = " $ {e a (nd.ti            e||'')}" placehol d er = sk a question…"
+            oninput = "uf('${id}','title',this.value)" >
+            </        div >
+                <div class="n            ">
+                    <div class="n            abel" > Description < s p an ass=" nelabel-tok">{descriptio n }</span></div>
+                    extarea class="netar e a" id="ne-d" placeho ld er="M            e context…"
+                    oninput="uf('${id}','description',this.value)">${eh(nd.descrip        tio        n || '')}</textarea>
+     </div >
+                $ {customFldHtml}
+            <div class="nesec"> Answ er            di v class="nes ec-line"            /div></ d iv >
+    <div id="ne-ans">
+      ${ a n sl.m            (([a,t],i)=>{
+            co ns t c =C[i %C.l e ngth];                   const opts = all            s.map(nid=>`<option value="${nid}"${nid===t?' selected':''}>${nid}</option>`).join        (''        );
+        return `< di            cl ass ="a card">
+           <div class="nelabel" style="color:${c} ;margin-b            tom:4px">Answer ${i+1}</div>
+                     <div class="acard-top">
+                        <di v class="a dot" style="background:${c}"></div>
+              <input class="nei            ut " styl e=" flex:1" v a lue="$            a(a)}" placeholder="Answer text"
+              onchange="chAns('        ${i        d}',${i},this.value,null )"                          <butt             class="a d el" onclick="delAns('${id}',${i})">×</button                         </div>
+          <div class ="nelabel " s tyle="        mar        gin-top:5px">→ leads to</div>
+          <se        lect class        ="neselect" onchange="chAns('${id}',${i},nu        ll,this.value)">${ op            }</select>
+        </div > `;
+      }).jo i n(''
+    </div>
+    <button class="addansbtn"  o ncli            ="addAns('${id}')">＋ Add Answer</button>
+    ${id !== 's            rt' ? `<button  cl ass="delnodebtn" onclick="delNode('${id}') ">⚠ D        el        ete node &quot;${id}&quot;</button>` : ''}
+  `;
+        }
+
+        // ══════════════════════════        ════════════════════
+        // MUTATIO N S
+        // ═════════════════════════════════════════ ═════
+        function uf(i d, f, v) {if (!tree[id]) return;t re            id][f] = v; refreshNode(id); renderJSONArea(); renderPreview();}
+
+        function chAns            id, idx, new T, newTgt ) {
+            if (!tree[nid]) return;
+            const e = Obj            t.entries(tr ee[nid].answers || {});
+            const [ot, og] = e[idx] || ['            ''];
+  cons t  t = newT !== null ? newT : ot, tg = newTgt !== null ? newTgt : og; const f = {}; e.f orEach(([k, v], i) => {f[i = == idx            :k]=i === id x ? tg : v;});
+            tree[nid].answers = f;
+  refre            Node(nid); renderArrows();   r e nderJ S ONArea(); renderPreview();
+        }
+
+ funct i on add            s(nid){
+   i f(!tr e e[nid])return;
+            let t = 'new  an s we r ', n = 2;
+            while (tre e[nid].swers[t]) t = `new answer ${n++}`;
+            tree[nid].answers[t] = nodeIds()[0] || nid;
+  re            eshNode(nid); renderArrows(); re        nd        erNED(); renderJSONArea(); renderPreview();
+        }
+
+        function q ui ckA dd(nid){a ddA ns(nid);selectNo de(nid);}
+
+func        tion delAns(nid, idx){
+            if (!tree[nid]) return;
+            const e = Object.e n tr ies (tree[nid].answer s || {}), f = {};
+            e.f        orEach(([k, v], i) => {if (i !== idx) f[k] = v;});
+            tree[nid].answers = f;
+            refreshNode(nid); renderArro        ws(); renderNED(); render JS            Ar ea(); ren derPrevi();
+        }
+
+f u nction delNode(id){
+            if (id === 'start') otify('⚠   Cannot delete the st art n ode'            return;
+        }
+        delete tree[id];         del        ete pos[id];
+        for (const n of Object.values(tree))
+            if (n && n.answers)  fo            co nst[k, v]  of Obje.en tr                n.answe r s)) if (v === id) delete n.ers[k];
+        if (selId === id) selId                l;
+  re n derCanvas(); r                rNE D(); renderJSONArea(); renderPrevi ew();
+}
+
+        function r efr esh N ode(id){
+  co n st p = p os[i d], old = CT.qu e rySele(`.node[data-id="${id}"]`);
+            if (old && p && tree[id]) CT.replace            i ld(mk Node(id, tree[id], p), old);
+        }
+
+        // ══        ════════════════════ ══            ════════ ═ ═══════════
+        // DIALOG
+        // ═════════════            ═══ ══                ═══════ ═ ══════════════
+        function showD l g(){
+  doc u men                tEl ementById('dlg-id').value = '';
+            do cument.getElementB y Id('dl g -title').valu e = '';
+            do c ument.getElem e ntById                g').classList.add('open');
+            setTimeout(() => document.g etEleme                Id('dlg-id').focus(), 50);
+        }
+        function closeDlg() {document.ge            l ement ById('dlg').classList.rem ove('open');}
+        function sl        ugi        fy(inp){inp.value = in value.to L owerCase().replace(/[^a-z0-9-]/g, '-').pla ce(/-+/g, ' -');}
+        function confirmAdd() {
+            let i d = doc ume nt.getElementById('dlg-id').v            ue.tr im().replace(/\s+/g, '-');
+            if (!id) id = 'node-' + Mat        h.random().toString(3            .slice(2, 7);
+            if (tree[id]) {notify(`Node "${id}" a lread y exists`); re turn;}
+            tree[id] = {title: docume        nt.getElementById('dlg-title').value.trim(), de        scription: '', answers: {}};
+            const wrap = document.getElementById('c        anvas-wrap');
+  co ns            cx = (wrap.clientWidth / 2 - tf.x) / tf, cy = (wrap.clientHeight / 2 - t f.f.s;
+  p o s[id] = {x: cx - NW / 2 + (Math.random() - .5) * 100, y: cy - 60 + (Math.random() - 100};
+            closeDlg(); ren                    vas(); selectNode(id); renderJSON Ar ea(); renderPreview();
+  n o tify(`Node "${id}" created`);
+        }
+        document.ge t ElementById('dlg').addEventListener('click', e => {if (e.target === e.currentTarget                    Dlg();});
+docum ent.g etElementById('dlg-title').addEventListener('keydown', e => {if (e.key === 'Enter')con                Add();});
+
+        // ══════════════════════════════════════════════
+        / / JSON
+// ════════ ══ ══════════ ═ ═════════════════ ══ ══════
+functio n  treeWithMeta(){
+            // Attach current templ a te state into tree before serialising
+            const out = ON.parse(JSON.ringify(tree));
+            out._template = {sVars: tmpl.cssVars, qTpl: tmpl.qTpl, rTpl: tmpl.rTpl};
+            return out;
+        }
+
+        function loadMeta(parsed) {
+            if (parsed._template) {
+                const t = parsed._template;
+                if (Array.isArray(t.cssVars)) tmpl.cssVars = t.cssVars;
+                if (typeof t.qTpl === 'string') tmpl.qTpl = t.qTpl;
+                if (typeof t.rTpl === 'string') tmpl.rTpl = t.rTpl;
+            }
+        }
+
+        function renderJSONArea() {
+            if (_jpause) return;
+            const ta = document.getElementById('json-area');
+            ta.value = JSON.stringify(treeWithMeta(), null, 2);
+            ta.classList.remove('err');
+        }
+
+        document.getElementById('json-area').addEventListener('input', function () {
+            if (_jpause) return;
+            try {
+                const p = JSON.parse(this.value); this.classList.remove('err');
+                _jpause = true; tree = p; loadMeta(p);
+                for (const id of nodeIds()) if (!pos[id]) pos[id] = {x: 100 + Math.random() * 400, y: 100 + Math.random() * 400};
+                renderCanvas(); renderPreview(); renderNED(); renderTplTab(); _jpause = false;
+            } catch {this.classList.add('err');}
+        });
+
+        function applyJSON() {
+            const ta = document.getElementById('json-area');
+            try {
+                const p = JSON.parse(ta.value); _jpause = true; tree = p; loadMeta(p);
+                for (const id of nodeIds()) if (!pos[id]) pos[id] = {x: 100 + Math.random() * 400, y: 100 + Math.random() * 400};
+                renderCanvas(); renderPreview(); renderNED(); renderTplTab(); _jpause = false;
+                ta.classList.remove('err'); notify('JSON applied ✓');
+            } catch {ta.classList.add('err'); notify('Invalid JSON');}
+        }
+
+        function fmtJSON() {
+            const ta = document.getElementById('json-area');
+            try {ta.value = JSON.stringify(JSON.parse(ta.value), null, 2); ta.classList.remove('err');}
+            catch {notify('Invalid JSON — cannot format');}
+        }
+
+        function copyJSON() {
+            navigator.clipboard.writeText(JSON.stringify(treeWithMeta(), null, 2)).then(() => notify('JSON copied ✓'));
+        }
+
+        // ══════════════════════════════════════════════
+        // TEMPLATE EDITOR
+        // ══════════════════════════════════════════════
+        function renderTplTab() {
+            const flds = fields();
+            const allToks = ['title', 'description', ...flds.ma        p(f => f.id)];
+            const qToks = [...allToks, 'answers'];
+
+            const isHex = v => /^ # [0-9a-fA-F]{3        ,8}$/.test(v.trim());
+
+            const cssRows = tm        pl.cssVa        rs.map((row, i) => `
+    <div class="tvar-row"        >
+      <input class="t va            key" value="${ea(row.key)}" placeholder="-- va r-name"
+        onchange="se tCVarKey(${i} ,th is.valu            " title="CSS variable name">
+      <input cl as s="tvar-label-in" style="wid th:88px;flex- shr ink:0;b            kg roun d:v ar(--surface2);border:1px         sol        id var(--border);border-radius:4px;padding:        4px 7px;font-family        :var(--mono);font-size:0.6rem;color:var(--t        ext-mid);outline:none ;" value="${ea(row.label)}" placeh older ="La bel"
+         onchange="setC VarLabel(${i},this.val ue)">
+      ${isHex(row.val) ? `<in        put type="color" clas s="tvar-color" value="${r ow.val.slice(0, 7)
+        } "
+        oninput = "setCV arVal(${i},this.value,true)" titl        e = "Pick color" > `: ``}
+       <in p ut class="tvar-val" value= " $ {ea(row.val)}" placeholder=" value"
+          onin p ut="s etCVarVal( ${i},this.value,false)" i        d="tvar-val-${i}">
+                 <button c l ass="tvar-del" onclick="delCVar( ${i})" t i tle="Re move">×</b u tton>
+               /div>`).join(' ');
+                onst fi e ldRows = flds.map((f, i) = > `
+    <                class=" t field-row">
+                      ut class = "t fi eld- id" v a lue="${ea(f.id)}" placeholder ="f i eld -id"
+         onchange="se tFieldId($ {i},this.value)"
+        style=" width :100px;flex-shrink:0;backgroun d:v                -surface2);border            px  solid var(--        bor        der);border-radius:4px;padding:5px 7px;font        -family:va        r(--mono);font-size:0.63rem;color:var(--acc        ent);outline:none;">
+       <input cl ass="tfield-lab el" value= "${ea(f.label)}" placeholder="Dis        play label"
+        onchange="setFieldLabel        (${i},thi        s.value)"
+        style="flex:1;background:        var(--sur        face2);border:1px  solid var ( --border);border-radius:4px;paddi ng:5px 7px;fon t -f amily:var(--mono);font-si ze:0.63rem;color:v ar( - -text);outlin e: none;">
+      <button class= "tvar-del        " onclick="delField(${i})" title="Remove fi        eld">×</b        utton>
+    </div>`).join('');
+
+        const tokC        hips = (toks, seconda ry = []) =>
+            toks.ma p(t => `<span class="tok ${secondary.includes(t) ? ' secon        dary' : ''}" onc lick="i ns er tTok(this)">{${t} }</span>`).join('');
+
+        document.getById('tpl-ed').innerHTML = `
+
+    <!-- ── CSS Variables ── -->
+    <div class="tsec">
+      <div class="tsec-head">
+        CSS Variables
+        <div class="tsec-line"></div>
+        <button class="tsec-add" onclick="addCVar()">＋ Add</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.57rem;color:var(--text-dim);margin-bottom:8px;">
+        These become <code style="color:var(--accent)">:root</code> variables in the output HTML. Reference them in templates with <code style="color:var(--accent)">var(--name)</code>.
+      </div>
+      ${cssRows}
+    </div>
+
+    <!-- ── Custom Fields ── -->
+    <div class="tsec">
+      <div class="tsec-head">
+        Custom Fields
+        <div class="tsec-line"></div>
+        <button class="tsec-add" onclick="addField()">＋ Add</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.57rem;color:var(--text-dim);margin-bottom:8px;">
+        Extra data fields per node — stored in the JSON, usable as <code style="color:var(--accent)">{field-id}</code> tokens in templates.
+      </div>
+      ${fieldRows || `<div style="font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);padding:6px 0;">No custom fields yet.</div>`}
+    </div>
+
+    <!-- ── Question Slide ── -->
+    <div class="tsec">
+      <div class="tsec-head">Question Slide Template<div class="tsec-line"></div></div>
+      <div style="font-family:var(--mono);font-size:0.57rem;color:var(--text-dim);margin-bottom:6px;">
+        Inner HTML for nodes with answers. Click a token to copy it:
+      </div>
+      <div class="tokens">${tokChips(['title', 'description'], ['title', 'description'])}${tokChips(['answers'], ['answers'])}${flds.map(f => `<span class="tok" onclick="insertTok(this)">{${f.id}}</span>`).join('')}</div>
+      <textarea class="ttpl" id="tpl-q" rows="5"
+        oninput="tmpl.qTpl=this.value;renderPreview()">${eh(tmpl.qTpl)}</textarea>
+    </div>
+
+    <!-- ── Result Slide ── -->
+    <div class="tsec">
+      <div class="tsec-head">Result Slide Template<div class="tsec-line"></div></div>
+      <div style="font-family:var(--mono);font-size:0.57rem;color:var(--text-dim);margin-bottom:6px;">
+        Inner HTML for terminal nodes (no answers). Available tokens:
+      </div>
+      <div class="tokens">${tokChips(['title', 'description'], ['title', 'description'])}${flds.map(f => `<span class="tok" onclick="insertTok(this)">{${f.id}}</span>`).join('')}</div>
+      <textarea class="ttpl" id="tpl-r" rows="5"
+        oninput="tmpl.rTpl=this.value;renderPreview()">${eh(tmpl.rTpl)}</textarea>
+    </div>
+  `;
+}
+
+        // Insert clicked token into the focused textarea
+        function insertTok(el) {
+            const tok = el.textContent;
+            // Try to find if a template textarea is focused
+            const focused = document.activeElement;
+            if (focused && (focused.id === 'tpl-q' || focused.id === 'tpl-r')) {
+                const s = focused.selectionStart, e2 = focused.selectionEnd;
+                focused.value = focused.value.slice(0, s) + tok + focused.value.slice(e2);
+                focused.selectionStart = focused.selectionEnd = s + tok.length;
+                focused.dispatchEvent(new Event('input'));
+            } else {
+                navigator.clipboard.writeText(tok).then(() => notify(tok + ' copied'));
+            }
+        }
+
+        // CSS var mutations
+        function setCVarKey(i, v) {
+            if (!tmpl.cssVars[i]) return;
+            v = v.startsWith('--') ? v : '--' + v.replace(/[^a-z0-9-]/g, '');
+            tmpl.cssVars[i].key = v; renderPreview(); renderTplTab();
+        }
+        function setCVarLabel(i, v) {if (tmpl.cssVars[i]) tmpl.cssVars[i].label = v;}
+        function setCVarVal(i, v, fromColor) {
+            if (!tmpl.cssVars[i]) return;
+            tmpl.cssVars[i].val = v;
+            if (!fromColor) {renderPreview(); renderTplTab();}
+            else {
+                // Also update text input
+                const el = document.getElementById(`tvar-val-${i}`);
+                if (el) el.value = v;
+                renderPreview();
+            }
+        }
+        function addCVar() {
+            tmpl.cssVars.push({key: '--new-var', label: 'New variable', val: '#ffffff'});
+            renderTplTab(); renderPreview();
+        }
+        function delCVar(i) {tmpl.cssVars.splice(i, 1); renderTplTab(); renderPreview();}
+
+        // Custom field mutations
+        function addField() {
+            if (!tree._fields) tree._fields = [];
+            tree._fields.push({id: 'field-' + Math.random().toString(36).slice(2, 5), label: 'New Field'});
+            renderTplTab(); renderNED(); renderJSONArea(); renderPreview();
+        }
+        function setFieldId(i, v) {
+            const f = fields(); if (!f[i]) return;
+            v = v.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+            f[i].id = v; renderTplTab(); renderNED(); renderJSONArea(); renderPreview();
+        }
+        function setFieldLabel(i, v) {
+            const f = fields(); if (!f[i]) return;
+            f[i].label = v; renderTplTab(); renderNED(); renderJSONArea();
+        }
+        function delField(i) {
+            const f = fields(); if (!f[i]) return;
+            const fid = f[i].id; f.splice(i, 1);
+            if (!f.length) delete tree._fields;
+            renderTplTab(); renderNED(); renderJSONArea(); renderPreview();
+        }
+
+        // ══════════════════════════════════════════════
+        // HTML GENERATION
+        // ══════════════════════════════════════════════
+        function genHTML() {
+            const flds = fields();
+            const entries = nodeEntries();
+            const firstId = (tree['start'] ? 'start' : entries[0]?.[0]) || 'start';
+
+            // :root CSS vars block
+            const rootVars = tmpl.cssVars.map(r => `  ${r.key}: ${r.val};`).join('\n');
+
+            // Slides
+            const slides = entries.map(([id, nd]) => {
+                const ansl = Object.entries(nd.answers || {}), isTerm = !ansl.length;
+                const answersHTML = ansl.map(([a, t]) => `<button class="btn" onclick="go('${t}')">${eh(a)}</button>`).join('');
+                let tpl = isTerm ? tmpl.rTpl : tmpl.qTpl;
+                // Replace built-in tokens
+                tpl = tpl.replace(/\{title\}/g, eh(nd.title || id))
+                    .replace(/\{description\}/g, eh(nd.description || ''));
+                if (!isTerm) tpl = tpl.replace(/\{answers\}/g, answersHTML);
+                // Replace custom field tokens
+                for (const f of flds) tpl = tpl.replace(new RegExp(`\\{${f.id}\\}`, 'g'), eh(nd[f.id] || ''));
+                return `<div class="slide" id="slide-${id}">\n${tpl}\n</div>`;
+            }).join('\n');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+${rootVars}
+}
+body{background:var(--bg,#09090f);color:var(--text,#d8d8f0);font-family:var(--font,'Segoe UI',system-ui,sans-serif);height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:40px;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(10px)}
+.slide.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+h2{font-size:clamp(1.4rem,4vw,2.2rem);font-weight:700;max-width:560px;line-height:1.3;color:var(--h2,#eeeeff)}
+.sub{color:var(--sub,#6060a0);max-width:460px;line-height:1.7;font-size:.95rem;margin:0}
+.ch{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:600px;margin-top:6px}
+.btn{padding:13px 26px;background:var(--btn-bg,rgba(124,109,255,.1));color:var(--btn-color,#aaaaf8);border:1px solid var(--btn-border,rgba(124,109,255,.25));border-radius:10px;font-size:.95rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:var(--btn-hover,rgba(124,109,255,.25));color:#fff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.btn.sec{background:rgba(255,255,255,.04);color:#505090;border-color:rgba(255,255,255,.08);font-size:.82rem}
+.btn.sec:hover{color:#9090d0;background:rgba(255,255,255,.08);transform:none;box-shadow:none}
+.res{font-size:clamp(1.5rem,5vw,2.6rem);font-weight:700;color:var(--res,#eeeeff);max-width:540px;line-height:1.25}
+.rsub{color:var(--res-sub,#5050a0);font-size:.95rem;max-width:440px;line-height:1.7;margin:0}
+</style>
+</head>
+<body>
+${slides}
+<script>
+function go(id){
+  document.querySelectorAll('.slide').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('slide-'+id);
+  if(el)el.classList.add('active');
+}
+go('${firstId}');
+<\/script>
+</body>
+</html>`;
+        }
+
+        function renderPreview() {document.getElementById('preview-frame').srcdoc = genHTML();}
+
+        // ══════════════════════════════════════════════
+        // TABS
+        // ══════════════════════════════════════════════
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+            if (tab === 'json') renderJSONArea();
+            if (tab === 'template') renderTplTab();
+        }
+
+        // ══════════════════════════════════════════════
+        // EXPORT / IMPORT
+        // ══════════════════════════════════════════════
+        function exportJSON() {dl(new Blob([JSON.stringify(treeWithMeta(), null, 2)], {type: 'application/json'}), 'decision-tree.json'); notify('JSON exported ✓');}
+        function exportHTML() {dl(new Blob([genHTML()], {type: 'text/html'}), 'decision-tree.html'); notify('HTML exported ✓');}
+        function dl(blob, name) {const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; a.click(); URL.revokeObjectURL(u);}
+        function importJSON() {
+            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+            inp.onchange = e => {
+                const f = e.target.files[0]; if (!f) return;
+                const r = new FileReader();
+                r.onload = ev => {
+                    try {
+                        const parsed = JSON.parse(ev.target.result);
+                        tree = parsed; loadMeta(parsed);
+                        pos = {}; autoLayout(); renderAll(); renderTplTab(); fitView();
+                        notify('JSON imported ✓');
+                    } catch {notify('Invalid JSON file');}
+                };
+                r.readAsText(f);
+            }; inp.click();
+        }
+
+        // ══════════════════════════════════════════════
+        // LAYOUT
+        // ══════════════════════════════════════════════
+        function resetLayout() {autoLayout(); renderCanvas(); fitView(); notify('Layout reset ✓');}
+
+        // ══════════════════════════════════════════════
+        // NOTIF
+        // ══════════════════════════════════════════════
+        let _nt;
+        function notify(m) {const el = document.getElementById('notif'); el.textContent = m; el.classList.add('show'); clearTimeout(_nt); _nt = setTimeout(() => el.classList.remove('show'), 2500);}
+
+        // ══════════════════════════════════════════════
+        // UTILS
+        // ══════════════════════════════════════════════
+        function eh(s) {return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');}
+        function ea(s) {return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');}
+    </script>
+</body>
+
+</html>

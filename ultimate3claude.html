@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeCraft — Decision Tree Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080810;
+            --surface: #10101e;
+            --surface2: #18182a;
+            --surface3: #20203a;
+            --border: #28284a;
+            --border2: #38386a;
+            --accent: #7c6dff;
+            --accent-glow: rgba(124, 109, 255, 0.18);
+            --red: #ff5f7e;
+            --green: #4dcc88;
+            --gold: #ffd166;
+            --text: #d8d8f0;
+            --text-dim: #5a5a90;
+            --text-mid: #9090b8;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+            --node-w: 220px;
+            --r: 10px;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── HEADER ── */
+        header {
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: -0.03em;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .logo-sub {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .h-sep {
+            width: 1px;
+            height: 22px;
+            background: var(--border);
+            margin: 0 3px;
+            flex-shrink: 0;
+        }
+
+        .h-spacer {
+            flex: 1;
+        }
+
+        .hbtn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-mid);
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .hbtn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .hbtn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .hbtn.primary:hover {
+            background: #9484ff;
+            border-color: #9484ff;
+        }
+
+        .hbtn.green {
+            border-color: #2a5a3a;
+            color: var(--green);
+        }
+
+        .hbtn.green:hover {
+            background: rgba(77, 204, 136, 0.1);
+            border-color: var(--green);
+        }
+
+        .hbtn.gold {
+            border-color: #5a4a1a;
+            color: var(--gold);
+        }
+
+        .hbtn.gold:hover {
+            background: rgba(255, 209, 102, 0.1);
+            border-color: var(--gold);
+        }
+
+        /* ── LAYOUT ── */
+        main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ── CANVAS ── */
+        #canvas-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg);
+            background-image: radial-gradient(circle, rgba(38, 38, 68, 0.9) 1px, transparent 1px);
+            background-size: 26px 26px;
+        }
+
+        #canvas-transform {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6000px;
+            height: 6000px;
+            transform-origin: 0 0;
+        }
+
+        #svg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6000px;
+            height: 6000px;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* ── NODES ── */
+        .node {
+            position: absolute;
+            width: var(--node-w);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            cursor: grab;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.12s, box-shadow 0.12s;
+        }
+
+        .node:hover {
+            border-color: var(--border2);
+        }
+
+        .node.selected {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        .node.nstart {
+            border-color: rgba(255, 209, 102, 0.5);
+        }
+
+        .node.nstart .nhead {
+            background: rgba(255, 209, 102, 0.05);
+        }
+
+        .node.nterm {
+            border-color: rgba(77, 204, 136, 0.4);
+        }
+
+        .node.nterm .nhead {
+            background: rgba(77, 204, 136, 0.05);
+        }
+
+        .nhead {
+            padding: 9px 10px 8px;
+            border-bottom: 1px solid var(--border);
+            border-radius: calc(var(--r) - 1.5px) calc(var(--r) - 1.5px) 0 0;
+        }
+
+        .nbadge {
+            font-family: var(--mono);
+            font-size: 0.57rem;
+            color: var(--text-dim);
+            margin-bottom: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nstart .nbadge {
+            color: rgba(255, 209, 102, 0.6);
+        }
+
+        .nterm .nbadge {
+            color: rgba(77, 204, 136, 0.6);
+        }
+
+        .ntitle {
+            font-size: 0.77rem;
+            font-weight: 600;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .ntitle.empty {
+            color: var(--text-dim);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .nbody {
+            padding: 7px 8px 5px;
+        }
+
+        .nans {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .npill {
+            flex: 1;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            border: 1px solid;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .nadd {
+            display: flex;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 3px 2px;
+            border-radius: 3px;
+            transition: color 0.12s;
+        }
+
+        .nadd:hover {
+            color: var(--accent);
+        }
+
+        /* ── RIGHT PANEL ── */
+        #right-panel {
+            width: 375px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .tab {
+            padding: 11px 13px;
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            color: var(--text-dim);
+            border-bottom: 2px solid transparent;
+            transition: all 0.12s;
+            letter-spacing: 0.02em;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text-mid);
+        }
+
+        .pane {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .pane.active {
+            display: flex;
+        }
+
+        /* ── JSON ── */
+        #json-area {
+            flex: 1;
+            background: #05050d;
+            border: none;
+            resize: none;
+            font-family: var(--mono);
+            font-size: 0.69rem;
+            line-height: 1.65;
+            color: #88aaee;
+            padding: 14px 16px;
+            outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        #json-area.err {
+            color: var(--red) !important;
+        }
+
+        .pfooter {
+            padding: 7px 10px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ── PREVIEW ── */
+        #preview-frame {
+            flex: 1;
+            border: none;
+            background: #000;
+        }
+
+        /* ── NODE EDITOR ── */
+        #ned {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        #ned::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #ned::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .neempty {
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 60px 20px;
+            line-height: 2.2;
+        }
+
+        .neempty big {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+
+        .neg {
+            margin-bottom: 12px;
+        }
+
+        .nelabel {
+            font-family: var(--mono);
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+        }
+
+        .neinput,
+        .neselect,
+        .netarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 6px 9px;
+            font-family: var(--mono);
+            font-size: 0.71rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.12s;
+        }
+
+        .neinput:focus,
+        .neselect:focus,
+        .netarea:focus {
+            border-color: var(--accent);
+        }
+
+        .neinput[readonly] {
+            color: var(--text-dim);
+            cursor: default;
+            background: var(--surface);
+        }
+
+        .neselect {
+            cursor: pointer;
+        }
+
+        .netarea {
+            resize: vertical;
+            min-height: 48px;
+            line-height: 1.5;
+        }
+
+        .nesec {
+            display: flex;
+            align-items: center;
+            margin: 16px 0 9px;
+            font-family: var(--mono);
+            font-size: 0.58rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            gap: 8px;
+        }
+
+        .nesec-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .acard {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 8px;
+            margin-bottom: 7px;
+        }
+
+        .acard-top {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .adot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .adel {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 1rem;
+            flex-shrink: 0;
+            transition: all 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .adel:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 95, 126, 0.1);
+        }
+
+        .addansbtn {
+            width: 100%;
+            padding: 7px;
+            background: transparent;
+            border: 1px dashed var(--border2);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            margin-bottom: 10px;
+        }
+
+        .addansbtn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .delnodebtn {
+            width: 100%;
+            padding: 7px;
+            background: rgba(255, 95, 126, 0.05);
+            border: 1px solid rgba(255, 95, 126, 0.2);
+            border-radius: 6px;
+            color: var(--red);
+            font-family: var(--mono);
+            font-size: 0.67rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            margin-top: 14px;
+        }
+
+        .delnodebtn:hover {
+            background: rgba(255, 95, 126, 0.14);
+            border-color: var(--red);
+        }
+
+        /* ── CANVAS TOOLBAR ── */
+        #ctb {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 6px 14px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+            z-index: 50;
+        }
+
+        .ctbsep {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            margin: 0 3px;
+        }
+
+        .ctbbtn {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-family: var(--mono);
+            font-size: 0.64rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-mid);
+            transition: all 0.12s;
+        }
+
+        .ctbbtn:hover {
+            background: var(--surface2);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .ctbbtn.ac {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .ctbbtn.ac:hover {
+            background: #9484ff;
+        }
+
+        .zoomlbl {
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            min-width: 38px;
+            text-align: center;
+        }
+
+        /* ── NOTIF ── */
+        #notif {
+            position: fixed;
+            bottom: 16px;
+            right: 395px;
+            background: var(--surface2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.66rem;
+            padding: 7px 14px;
+            border-radius: 6px;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: all 0.22s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #notif.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── DIALOG ── */
+        #dlg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #dlg.open {
+            display: flex;
+        }
+
+        .dlgbox {
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            padding: 22px;
+            width: 300px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .dlgbox h3 {
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        .dlgbtns {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">⬡ TreeCraft <span class="logo-sub">editor</span></div>
+        <div class="h-sep"></div>
+        <button class="hbtn" onclick="importJSON()">⬆ Import JSON</button>
+        <button class="hbtn green" onclick="exportJSON()">⬇ JSON</button>
+        <button class="hbtn gold" onclick="exportHTML()">⬇ HTML</button>
+        <div class="h-spacer"></div>
+        <button class="hbtn primary" onclick="showDlg()">＋ Add Node</button>
+    </header>
+
+    <main>
+        <div id="canvas-wrap">
+            <div id="canvas-transform">
+                <svg id="svg-layer"></svg>
+            </div>
+            <div id="ctb">
+                <button class="ctbbtn ac" onclick="showDlg()">＋ Node</button>
+                <div class="ctbsep"></div>
+                <button class="ctbbtn" onclick="resetLayout()">⟳ Auto-layout</button>
+                <button class="ctbbtn" onclick="fitView()">⊡ Fit</button>
+                <div class="ctbsep"></div>
+                <button class="ctbbtn" onclick="zoomBy(1.15)">＋</button>
+                <span class="zoomlbl" id="zlbl">100%</span>
+                <button class="ctbbtn" onclick="zoomBy(0.87)">－</button>
+            </div>
+        </div>
+
+        <div id="right-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="editor" onclick="switchTab('editor')">Node Editor</div>
+                <div class="tab" data-tab="json" onclick="switchTab('json')">JSON</div>
+                <div class="tab" data-tab="preview" onclick="switchTab('preview')">Preview</div>
+            </div>
+
+            <div class="pane active" data-tab="editor">
+                <div id="ned">
+                    <div class="neempty"><big>⬡</big>Click a node<br>to select and edit it</div>
+                </div>
+            </div>
+
+            <div class="pane" data-tab="json">
+                <textarea id="json-area" spellcheck="false"></textarea>
+                <div class="pfooter">
+                    <button class="hbtn" onclick="copyJSON()">Copy</button>
+                    <button class="hbtn" onclick="applyJSON()">Apply</button>
+                    <button class="hbtn" onclick="fmtJSON()">Format</button>
+                </div>
+            </div>
+
+            <div class="pane" data-tab="preview">
+                <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+                <div class="pfooter">
+                    <span style="flex:1;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim)">Live HTML
+                        preview</span>
+                    <button class="hbtn gold" onclick="exportHTML()">⬇ Export</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Node Dialog -->
+    <div id="dlg">
+        <div class="dlgbox">
+            <h3>New Node</h3>
+            <div class="neg">
+                <div class="nelabel">Node ID (slug)</div>
+                <input class="neinput" id="dlg-id" placeholder="e.g. my-question" oninput="slugify(this)">
+            </div>
+            <div class="neg">
+                <div class="nelabel">Title</div>
+                <input class="neinput" id="dlg-title" placeholder="Question text…">
+            </div>
+            <div class="dlgbtns">
+                <button class="hbtn" onclick="closeDlg()">Cancel</button>
+                <button class="hbtn primary" onclick="confirmAdd()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notif"></div>
+
+    <script>
+        // ═══════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════
+        let tree = {};
+        let pos = {};
+        let selId = null;
+        let _drag = null;
+        let tf = {x: 60, y: 60, s: 1};
+        let _jpause = false;
+
+        const NW = 220, NH_HEAD = 54, NBPAD = 7, ANH = 28, ADDH = 24;
+        const C = ['#7c6dff', '#ff5f7e', '#ffd166', '#4dcc88', '#ff9f43',
+            '#a29bfe', '#fd79a8', '#74b9ff', '#55efc4', '#e17055',
+            '#00cec9', '#6c5ce7', '#fab1a0', '#fdcb6e'];
+
+        // ═══════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════
+        const DEFAULT = {
+            "start": {"title": "Do you like coffee?", "description": "Only truth.", "answers": {"yes": "like-coffee", "no": "dont-like-coffee"}},
+            "like-coffee": {"title": "What flavour of coffee?", "description": "", "answers": {"black coffee": "black-coffee", "latte": "latte", "turek": "turek"}},
+            "dont-like-coffee": {"title": "Tea or gin?", "description": "", "answers": {"tea": "tea", "gin": "gin"}},
+            "tea": {"title": "Tea time \u2615", "description": "", "answers": {"what are you?": "otherman"}},
+            "gin": {"title": "Gin time \ud83c\udf78", "description": "", "answers": {"what are you?": "otherman"}},
+            "black-coffee": {"title": "Black coffee \u2615", "description": "", "answers": {"what are you?": "coffeman"}},
+            "latte": {"title": "Latte lover \u2615", "description": "", "answers": {"what are you?": "coffeman"}},
+            "turek": {"title": "Turek devotee \u2615", "description": "", "answers": {"what are you?": "coffeman"}},
+            "coffeman": {"title": "You are a coffee person!", "description": "Life runs on espresso.", "answers": {}},
+            "otherman": {"title": "You are not a coffee person!", "description": "Tea and gin are fine too.", "answers": {}}
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            tree = JSON.parse(JSON.stringify(DEFAULT));
+            autoLayout();
+            renderAll();
+            fitView(false);
+            setupEvents();
+        });
+
+        // ═══════════════════════════════════════
+        // LAYOUT
+        // ═══════════════════════════════════════
+        function autoLayout() {
+            const lvls = {}, seen = new Set();
+            const root = tree['start'] ? 'start' : Object.keys(tree)[0];
+            if (!root) return;
+            const q = [{id: root, l: 0}]; seen.add(root);
+            while (q.length) {
+                const {id, l} = q.shift();
+                if (!lvls[l]) lvls[l] = [];
+                lvls[l].push(id);
+                if (tree[id]) for (const t of Object.values(tree[id].answers))
+                    if (!seen.has(t) && tree[t]) {seen.add(t); q.push({id: t, l: l + 1});}
+            }
+            const CW = 290, RH = 210;
+            pos = {};
+            for (const [l, ids] of Object.entries(lvls)) {
+                const tot = ids.length * RH;
+                const sy = 700 - tot / 2;
+                ids.forEach((id, i) => pos[id] = {x: 80 + +l * CW, y: sy + i * RH});
+            }
+            let oy = 60;
+            for (const id of Object.keys(tree))
+                if (!pos[id]) {pos[id] = {x: 60, y: oy}; oy += 180;}
+        }
+
+        function nodeH(id) {
+            const n = tree[id]; if (!n) return NH_HEAD + NBPAD * 2 + ADDH;
+            return NH_HEAD + NBPAD * 2 + Object.keys(n.answers).length * ANH + ADDH;
+        }
+
+        // ═══════════════════════════════════════
+        // RENDER
+        // ═══════════════════════════════════════
+        function renderAll() {renderCanvas(); renderJSONArea(); renderPreview(); renderNED();}
+
+        const CT = document.getElementById('canvas-transform');
+        const SVG = document.getElementById('svg-layer');
+
+        function renderCanvas() {
+            CT.querySelectorAll('.node').forEach(n => n.remove());
+            for (const [id, d] of Object.entries(tree))
+                CT.appendChild(mkNode(id, d, pos[id] || {x: 100, y: 100}));
+            renderArrows();
+        }
+
+        function mkNode(id, d, p) {
+            const isS = id === 'start', isT = !Object.keys(d.answers).length, isSel = id === selId;
+            const el = document.createElement('div');
+            el.className = 'node' + (isS ? ' nstart' : '') + (isT ? ' nterm' : '') + (isSel ? ' selected' : '');
+            el.dataset.id = id;
+            el.style.cssText = `left:${p.x}px;top:${p.y}px`;
+            const title = d.title || '';
+            const ansHtml = Object.entries(d.answers).map(([a, t], i) => {
+                const c = C[i % C.length];
+                return `<div class="nans"><div class="npill" style="color:${c};border-color:${c}28;background:${c}10" title="${ea(a)} \u2192 ${ea(t)}">${eh(a)}</div></div>`;
+            }).join('');
+            el.innerHTML = `
+    <div class="nhead">
+      <div class="nbadge">${isS ? '\u25b6 START \u2014 ' : ''}${isT ? '\u25cf RESULT \u2014 ' : ''}${id}</div>
+      <div class="ntitle${!title ? ' empty' : ''}">${eh(title) || '(no title)'}</div>
+    </div>
+    <div class="nbody">${ansHtml}<div class="nadd" data-addans="${id}">\ufe0f\u2215 add answer</div></div>`;
+            el.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                e.stopPropagation();
+                if (e.target.closest('[data-addans]')) {quickAdd(id); return;}
+                selectNode(id);
+                _drag = {type: 'node', id, sx: e.clientX, sy: e.clientY, nx: p.x, ny: p.y};
+                CT.style.cursor = 'grabbing';
+            });
+            return el;
+        }
+
+        function renderArrows() {
+            while (SVG.firstChild) SVG.removeChild(SVG.firstChild);
+            const defs = svgel('defs'); SVG.appendChild(defs);
+            for (const [sid, d] of Object.entries(tree)) {
+                const sp = pos[sid]; if (!sp) continue;
+                const ansl = Object.entries(d.answers);
+                const sh = nodeH(sid);
+                ansl.forEach(([ans, tid], i) => {
+                    const tp = pos[tid]; if (!tp) return;
+                    const c = C[i % C.length];
+                    const th = nodeH(tid);
+                    const sx = sp.x + NW, sy = sp.y + NH_HEAD + NBPAD + i * ANH + ANH / 2;
+                    const tx = tp.x, ty = tp.y + th / 2;
+                    const dist = Math.abs(tx - sx), bend = Math.max(65, dist * 0.42);
+                    const mid = `arr-${sid}-${i}`.replace(/[^a-z0-9-]/g, '_');
+                    const mk = svgel('marker'); mk.setAttribute('id', mid);
+                    mk.setAttribute('markerWidth', '8'); mk.setAttribute('markerHeight', '6');
+                    mk.setAttribute('refX', '7'); mk.setAttribute('refY', '3'); mk.setAttribute('orient', 'auto');
+                    const pl = svgel('polygon'); pl.setAttribute('points', '0 0, 8 3, 0 6'); pl.setAttribute('fill', c);
+                    mk.appendChild(pl); defs.appendChild(mk);
+                    const path = svgel('path');
+                    path.setAttribute('d', `M${sx} ${sy} C${sx + bend} ${sy},${tx - bend} ${ty},${tx} ${ty}`);
+                    path.setAttribute('stroke', c); path.setAttribute('stroke-width', '1.5');
+                    path.setAttribute('fill', 'none'); path.setAttribute('opacity', '0.5');
+                    path.setAttribute('marker-end', `url(#${mid})`);
+                    SVG.appendChild(path);
+                    const lx = (sx + tx) / 2, ly = Math.min(sy, ty) - 7;
+                    const ls = ans.length > 17 ? ans.slice(0, 15) + '\u2026' : ans;
+                    const lw = ls.length * 5.4 + 10;
+                    const bg = svgel('rect');
+                    bg.setAttribute('x', lx - lw / 2); bg.setAttribute('y', ly - 11);
+                    bg.setAttribute('width', lw); bg.setAttribute('height', 14);
+                    bg.setAttribute('rx', 3); bg.setAttribute('fill', 'rgba(6,6,14,0.85)');
+                    SVG.appendChild(bg);
+                    const lb = svgel('text');
+                    lb.setAttribute('x', lx); lb.setAttribute('y', ly);
+                    lb.setAttribute('text-anchor', 'middle'); lb.setAttribute('font-size', '9');
+                    lb.setAttribute('font-family', 'JetBrains Mono,monospace');
+                    lb.setAttribute('fill', c); lb.setAttribute('opacity', '0.85');
+                    lb.textContent = ls; SVG.appendChild(lb);
+                });
+            }
+        }
+
+        function svgel(t) {return document.createElementNS('http://www.w3.org/2000/svg', t);}
+        function applyTF() {
+            CT.style.transform = `translate(${tf.x}px,${tf.y}px) scale(${tf.s})`;
+            document.getElementById('zlbl').textContent = Math.round(tf.s * 100) + '%';
+        }
+
+        // ═══════════════════════════════════════
+        // EVENTS
+        // ═══════════════════════════════════════
+        function setupEvents() {
+            const wrap = document.getElementById('canvas-wrap');
+            wrap.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                const n = e.target.closest('.node');
+                if (!n) {
+                    _drag = {type: 'canvas', sx: e.clientX, sy: e.clientY, tx: tf.x, ty: tf.y};
+                    wrap.style.cursor = 'grabbing';
+                    if (selId) {selId = null; document.querySelectorAll('.node.selected').forEach(n => n.classList.remove('selected')); renderNED();}
+                }
+            });
+            document.addEventListener('mousemove', e => {
+                if (!_drag) return;
+                if (_drag.type === 'node') {
+                    const dx = (e.clientX - _drag.sx) / tf.s, dy = (e.clientY - _drag.sy) / tf.s;
+                    const nx = _drag.nx + dx, ny = _drag.ny + dy;
+                    pos[_drag.id] = {x: nx, y: ny};
+                    const el = CT.querySelector(`.node[data-id="${_drag.id}"]`);
+                    if (el) {el.style.left = nx + 'px'; el.style.top = ny + 'px';}
+                    renderArrows();
+                } else if (_drag.type === 'canvas') {
+                    tf.x = _drag.tx + (e.clientX - _drag.sx);
+                    tf.y = _drag.ty + (e.clientY - _drag.sy);
+                    applyTF();
+                }
+            });
+            document.addEventListener('mouseup', () => {
+                _drag = null;
+                document.getElementById('canvas-wrap').style.cursor = '';
+                CT.style.cursor = '';
+            });
+            wrap.addEventListener('wheel', e => {
+                e.preventDefault();
+                const f = e.deltaY < 0 ? 1.12 : 0.9;
+                const ns = Math.min(3, Math.max(0.18, tf.s * f));
+                const r = wrap.getBoundingClientRect();
+                const mx = e.clientX - r.left, my = e.clientY - r.top;
+                tf.x = mx - (mx - tf.x) * (ns / tf.s);
+                tf.y = my - (my - tf.y) * (ns / tf.s);
+                tf.s = ns; applyTF();
+            }, {passive: false});
+        }
+
+        function zoomBy(f) {tf.s = Math.min(3, Math.max(0.18, tf.s * f)); applyTF();}
+
+        function fitView(anim = true) {
+            const wrap = document.getElementById('canvas-wrap');
+            const ids = Object.keys(pos); if (!ids.length) return;
+            let mx = Infinity, my = Infinity, Mx = -Infinity, My = -Infinity;
+            for (const id of ids) {const p = pos[id], h = nodeH(id); mx = Math.min(mx, p.x); my = Math.min(my, p.y); Mx = Math.max(Mx, p.x + NW); My = Math.max(My, p.y + h);}
+            const W = wrap.clientWidth, H = wrap.clientHeight, pd = 70;
+            const s = Math.min(1.5, Math.max(0.15, Math.min((W - pd * 2) / (Mx - mx), (H - pd * 2) / (My - my))));
+            tf.s = s; tf.x = pd - mx * s; tf.y = pd - my * s; applyTF();
+        }
+
+        // ═══════════════════════════════════════
+        // SELECT
+        // ═══════════════════════════════════════
+        function selectNode(id) {
+            selId = id;
+            document.querySelectorAll('.node').forEach(n => n.classList.toggle('selected', n.dataset.id === id));
+            renderNED(); switchTab('editor');
+        }
+
+        // ═══════════════════════════════════════
+        // NODE EDITOR
+        // ═══════════════════════════════════════
+        function renderNED() {
+            const el = document.getElementById('ned');
+            if (!selId || !tree[selId]) {
+                el.innerHTML = '<div class="neempty"><big>\u2b21</big>Click a node<br>to select and edit it</div>';
+                return;
+            }
+            const id = selId, nd = tree[id];
+            const ansl = Object.entries(nd.answers);
+            const allIds = Object.keys(tree);
+            el.innerHTML = `
+    <div class="neg"><div class="nelabel">Node ID</div><input class="neinput" value="${ea(id)}" readonly></div>
+    <div class="neg">
+      <div class="nelabel">Title / Question</div>
+      <input class="neinput" id="ne-t" value="${ea(nd.title)}" placeholder="Ask a question\u2026"
+        oninput="uf('${id}','title',this.value)">
+    </div>
+    <div class="neg">
+      <div class="nelabel">Description (optional)</div>
+      <textarea class="netarea" id="ne-d" placeholder="More context\u2026"
+        oninput="uf('${id}','description',this.value)">${eh(nd.description)}</textarea>
+    </div>
+    <div class="nesec">Answers<div class="nesec-line"></div></div>
+    <div id="ne-ans">
+      ${ansl.map(([a, t], i) => {
+                const c = C[i % C.length];
+                const opts = allIds.map(nid => `<option value="${nid}"${nid === t ? ' selected' : ''}>${nid}</option>`).join('');
+                return `<div class="acard">
+          <div class="nelabel" style="color:${c};margin-bottom:4px">Answer ${i + 1}</div>
+          <div class="acard-top">
+            <div class="adot" style="background:${c}"></div>
+            <input class="neinput" style="flex:1" value="${ea(a)}" placeholder="Answer text"
+              onchange="chAns('${id}',${i},this.value,null)">
+            <button class="adel" onclick="delAns('${id}',${i})">\u00d7</button>
+          </div>
+          <div class="nelabel" style="margin-top:5px">\u2192 leads to</div>
+          <select class="neselect" onchange="chAns('${id}',${i},null,this.value)">${opts}</select>
+        </div>`;
+            }).join('')}
+    </div>
+    <button class="addansbtn" onclick="addAns('${id}')">\ufe60 Add Answer</button>
+    ${id !== 'start' ? `<button class="delnodebtn" onclick="delNode('${id}')">\u26a0 Delete node &quot;${id}&quot;</button>` : ''}
+  `;
+        }
+
+        // ═══════════════════════════════════════
+        // MUTATIONS
+        // ═══════════════════════════════════════
+        function uf(id, f, v) {if (!tree[id]) return; tree[id][f] = v; refreshNode(id); renderJSONArea(); renderPreview();}
+
+        function chAns(nid, idx, newT, newTgt) {
+            if (!tree[nid]) return;
+            const e = Object.entries(tree[nid].answers);
+            if (idx >= e.length) return;
+            const [ot, og] = e[idx];
+            const t = newT !== null ? newT : ot, tg = newTgt !== null ? newTgt : og;
+            const f = {}; e.forEach(([k, v], i) => {f[i === idx ? t : k] = i === idx ? tg : v;});
+            tree[nid].answers = f;
+            refreshNode(nid); renderArrows(); renderJSONArea(); renderPreview();
+        }
+
+        function addAns(nid) {
+            if (!tree[nid]) return;
+            let t = 'new answer', n = 2;
+            while (tree[nid].answers[t]) t = `new answer ${n++}`;
+            tree[nid].answers[t] = Object.keys(tree)[0] || nid;
+            refreshNode(nid); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+        }
+
+        function quickAdd(nid) {addAns(nid); selectNode(nid);}
+
+        function delAns(nid, idx) {
+            if (!tree[nid]) return;
+            const e = Object.entries(tree[nid].answers), f = {};
+            e.forEach(([k, v], i) => {if (i !== idx) f[k] = v;});
+            tree[nid].answers = f;
+            refreshNode(nid); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+        }
+
+        function delNode(id) {
+            if (id === 'start') {notify('\u26a0 Cannot delete the start node'); return;}
+            delete tree[id]; delete pos[id];
+            for (const n of Object.values(tree))
+                for (const [k, v] of Object.entries(n.answers)) if (v === id) delete n.answers[k];
+            if (selId === id) selId = null;
+            renderCanvas(); renderNED(); renderJSONArea(); renderPreview();
+        }
+
+        function refreshNode(id) {
+            const p = pos[id];
+            const old = CT.querySelector(`.node[data-id="${id}"]`);
+            if (old && p) CT.replaceChild(mkNode(id, tree[id], p), old);
+        }
+
+        // ═══════════════════════════════════════
+        // DIALOG
+        // ═══════════════════════════════════════
+        function showDlg() {
+            document.getElementById('dlg-id').value = '';
+            document.getElementById('dlg-title').value = '';
+            document.getElementById('dlg').classList.add('open');
+            setTimeout(() => document.getElementById('dlg-id').focus(), 50);
+        }
+        function closeDlg() {document.getElementById('dlg').classList.remove('open');}
+        function slugify(inp) {inp.value = inp.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');}
+        function confirmAdd() {
+            let id = document.getElementById('dlg-id').value.trim().replace(/\s+/g, '-');
+            if (!id) id = 'node-' + Math.random().toString(36).slice(2, 7);
+            if (tree[id]) {notify(`Node "${id}" already exists`); return;}
+            const title = document.getElementById('dlg-title').value.trim();
+            tree[id] = {title, description: '', answers: {}};
+            const wrap = document.getElementById('canvas-wrap');
+            const cx = (wrap.clientWidth / 2 - tf.x) / tf.s, cy = (wrap.clientHeight / 2 - tf.y) / tf.s;
+            pos[id] = {x: cx - NW / 2 + (Math.random() - .5) * 100, y: cy - 60 + (Math.random() - .5) * 100};
+            closeDlg(); renderCanvas(); selectNode(id); renderJSONArea(); renderPreview();
+            notify(`Node "${id}" created`);
+        }
+        document.getElementById('dlg').addEventListener('click', e => {if (e.target === e.currentTarget) closeDlg();});
+        document.getElementById('dlg-title').addEventListener('keydown', e => {if (e.key === 'Enter') confirmAdd();});
+
+        // ═══════════════════════════════════════
+        // JSON
+        // ═══════════════════════════════════════
+        function renderJSONArea() {
+            if (_jpause) return;
+            const ta = document.getElementById('json-area');
+            ta.value = JSON.stringify(tree, null, 2);
+            ta.classList.remove('err');
+        }
+
+        document.getElementById('json-area').addEventListener('input', function () {
+            if (_jpause) return;
+            try {
+                const p = JSON.parse(this.value);
+                this.classList.remove('err');
+                _jpause = true; tree = p;
+                for (const id of Object.keys(tree)) if (!pos[id]) pos[id] = {x: 100 + Math.random() * 400, y: 100 + Math.random() * 400};
+                renderCanvas(); renderPreview(); renderNED(); _jpause = false;
+            } catch {this.classList.add('err');}
+        });
+
+        function applyJSON() {
+            const ta = document.getElementById('json-area');
+            try {
+                const p = JSON.parse(ta.value); _jpause = true; tree = p;
+                for (const id of Object.keys(tree)) if (!pos[id]) pos[id] = {x: 100 + Math.random() * 400, y: 100 + Math.random() * 400};
+                renderCanvas(); renderPreview(); renderNED(); _jpause = false;
+                ta.classList.remove('err'); notify('JSON applied \u2713');
+            } catch {ta.classList.add('err'); notify('Invalid JSON');}
+        }
+
+        function fmtJSON() {
+            const ta = document.getElementById('json-area');
+            try {ta.value = JSON.stringify(JSON.parse(ta.value), null, 2); ta.classList.remove('err');}
+            catch {notify('Invalid JSON \u2014 cannot format');}
+        }
+
+        function copyJSON() {
+            navigator.clipboard.writeText(JSON.stringify(tree, null, 2)).then(() => notify('JSON copied \u2713'));
+        }
+
+        // ═══════════════════════════════════════
+        // HTML GEN & PREVIEW
+        // ═══════════════════════════════════════
+        function genHTML() {
+            const ids = Object.keys(tree);
+            const slides = ids.map(id => {
+                const nd = tree[id], ansl = Object.entries(nd.answers), isTerm = !ansl.length;
+                const ansHtml = isTerm
+                    ? `<div class="res">${eh(nd.title || id)}</div>${nd.description ? `<p class="rsub">${eh(nd.description)}</p>` : ''}<button class="btn sec" onclick="go('start')">\u21a9 Start over</button>`
+                    : ansl.map(([a, t]) => `<button class="btn" onclick="go('${t}')">${eh(a)}</button>`).join('\n      ');
+                return `
+  <div class="slide" id="slide-${id}">
+    ${!isTerm ? `<h2>${eh(nd.title || id)}</h2>` : ''}
+    ${!isTerm && nd.description ? `<p class="sub">${eh(nd.description)}</p>` : ''}
+    <div class="ch">${ansHtml}</div>
+  </div>`;
+            }).join('');
+
+            const firstId = ids[0] || 'start';
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#09090f;color:#d8d8f0;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:40px;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(10px)}
+.slide.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+h2{font-size:clamp(1.4rem,4vw,2.2rem);font-weight:700;max-width:560px;line-height:1.3;color:#eeeeff}
+.sub{color:#6060a0;max-width:460px;line-height:1.7;font-size:.95rem}
+.ch{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:600px;margin-top:6px}
+.btn{padding:13px 26px;background:rgba(124,109,255,.1);color:#aaaaf8;border:1px solid rgba(124,109,255,.25);border-radius:10px;font-size:.95rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(124,109,255,.25);color:#fff;border-color:rgba(124,109,255,.5);transform:translateY(-2px);box-shadow:0 6px 20px rgba(124,109,255,.2)}
+.btn.sec{background:rgba(255,255,255,.04);color:#505090;border-color:rgba(255,255,255,.08);font-size:.82rem}
+.btn.sec:hover{color:#9090d0;background:rgba(255,255,255,.08);transform:none}
+.res{font-size:clamp(1.5rem,5vw,2.6rem);font-weight:700;color:#eeeeff;max-width:540px;line-height:1.25}
+.rsub{color:#5050a0;font-size:.95rem;max-width:440px;line-height:1.7}
+</style>
+</head>
+<body>
+${slides}
+<script>
+function go(id){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  var el=document.getElementById('slide-'+id);
+  if(el) el.classList.add('active');
+}
+go('${firstId}');
+<\/script>
+</body>
+</html>`;
+        }
+
+        function renderPreview() {document.getElementById('preview-frame').srcdoc = genHTML();}
+
+        // ═══════════════════════════════════════
+        // TABS
+        // ═══════════════════════════════════════
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+            if (tab === 'json') renderJSONArea();
+        }
+
+        // ═══════════════════════════════════════
+        // EXPORT / IMPORT
+        // ═══════════════════════════════════════
+        function exportJSON() {dl(new Blob([JSON.stringify(tree, null, 2)], {type: 'application/json'}), 'decision-tree.json'); notify('JSON exported \u2713');}
+        function exportHTML() {dl(new Blob([genHTML()], {type: 'text/html'}), 'decision-tree.html'); notify('HTML exported \u2713');}
+        function dl(blob, name) {const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; a.click(); URL.revokeObjectURL(u);}
+        function importJSON() {
+            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+            inp.onchange = e => {
+                const f = e.target.files[0]; if (!f) return;
+                const r = new FileReader();
+                r.onload = ev => {try {tree = JSON.parse(ev.target.result); pos = {}; autoLayout(); renderAll(); fitView(); notify('JSON imported \u2713');} catch {notify('Invalid JSON file');} };
+                r.readAsText(f);
+            }; inp.click();
+        }
+
+        // ═══════════════════════════════════════
+        // LAYOUT
+        // ═══════════════════════════════════════
+        function resetLayout() {autoLayout(); renderCanvas(); fitView(); notify('Layout reset \u2713');}
+
+        // ═══════════════════════════════════════
+        // NOTIF
+        // ═══════════════════════════════════════
+        let _nt;
+        function notify(m) {const el = document.getElementById('notif'); el.textContent = m; el.classList.add('show'); clearTimeout(_nt); _nt = setTimeout(() => el.classList.remove('show'), 2400);}
+
+        // ═══════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════
+        function eh(s) {return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');}
+        function ea(s) {return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');}
+    </script>
+</body>
+
+</html>
