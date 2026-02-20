@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Tree</title>
+<style>
+      body { margin: 0; font-family: Arial, sans-serif; background: #111; color: white; overflow: hidden; }
+      .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 40px; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+      .slide:target { opacity: 1; pointer-events: auto; z-index: 10; }
+
+      /* Magic selector to show the first slide when there is no hash in the URL */
+      body:not(:has(.slide:target)) #start { opacity: 1; pointer-events: auto; z-index: 10; }
+
+      h2 { font-size: 2rem; margin: 0; }
+      p.desc { font-size: 1.2rem; color: #a1a1aa; margin: 0; max-width: 600px; }
+      .buttons { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+      .btn { padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-size: 1rem; transition: background 0.2s ease; border: none; cursor: pointer; }
+      .btn:hover { background: #2563eb; }
+      .btn.restart { background: #10b981; }
+      .btn.restart:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+<div class="slide" id="start">
+  <h2 style="text-transform: capitalize;">Start</h2>
+  <p class="desc">Root node</p>
+  <div class="buttons"><a class="btn" href="#end">To finish</a></div>
+</div>
+<div class="slide" id="end">
+  <h2 style="text-transform: capitalize;">Finish</h2>
+  <p class="desc">Final node</p>
+  <div class="buttons"><a class="btn restart" href="#start">Start Over ↺</a></div>
+</div>
+</body>
+</html>

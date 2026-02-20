@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Decision Tree Editor</title>
+    <style>
+        :root {
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            gap: 12px;
+            background: #f4f6f8;
+            color: #0b1220
+        }
+
+        .sidebar {
+            width: 260px;
+            padding: 12px;
+            background: #fff;
+            border-right: 1px solid #e2e6ea;
+            box-shadow: 0 1px 0 rgba(11, 18, 32, 0.02);
+            overflow: auto
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 12px
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 6px 0
+        }
+
+        .nodes-list {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .node-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: linear-gradient(180deg, #fff, #fbfdff);
+            cursor: pointer
+        }
+
+        .node-btn.selected {
+            border-color: #c9d9ff;
+            background: #eef4ff
+        }
+
+        button,
+        .small-btn {
+            background: #2563eb;
+            border: none;
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer
+        }
+
+        .small-btn {
+            background: #6b7280;
+            color: #fff;
+            padding: 6px 8px;
+            font-size: 13px
+        }
+
+        input[type=text],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db
+        }
+
+        label {
+            font-size: 13px;
+            display: block;
+            margin: 6px 0 4px
+        }
+
+        .editor {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 12px
+        }
+
+        .card {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e6eef9;
+            box-shadow: 0 1px 0 rgba(11, 18, 32, 0.02)
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 13px
+        }
+
+        textarea {
+            min-height: 100px
+        }
+
+        .footer {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        pre {
+            background: #0b1220;
+            color: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 320px
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h1>Nodes</h1>
+        <div class="top-actions">
+            <input id="new-node-id" type="text" placeholder="node-id (optional)" />
+            <button id="add-node">Add</button>
+        </div>
+        <div class="muted">Click a node to edit. Dragging not supported; rename carefully.</div>
+        <div class="nodes-list" id="nodes-list"></div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7">
+        <div class="muted">Tips:</div>
+        <ul style="padding-left:18px;margin:6px 0 0 0">
+            <li>Create nodes first, then add answers and connect targets.</li>
+            <li>Mark a node FINAL to make it a terminal node with a "Retake" button.</li>
+        </ul>
+    </aside>
+    <main class="main">
+        <div class="editor">
+            <div class="card" id="editor-card">
+                <h1 id="editor-title">No node selected</h1>
+
+                <div id="editor-form" style="display:none">
+                    <label>Node ID</label>
+                    <input id="node-id" type="text" disabled />
+
+                    <label>Title</label>
+                    <input id="node-title" type="text" />
+
+                    <label>Description</label>
+                    <textarea id="node-desc"></textarea>
+
+                    <label><input id="node-final" type="checkbox" /> Final node (terminal)</label>
+
+                    <div id="answers-section">
+                        <label>Answers</label>
+                        <div class="answers" id="answers-list"></div>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button id="add-answer" class="small-btn">+ Add answer</button>
+                            <button id="remove-node" class="small-btn" style="background:#ef4444">Delete node</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card">
+                <h1>Export / Preview JSON</h1>
+                <div class="footer" style="margin-bottom:8px">
+                    <button id="export-json">Export JSON</button>
+                    <button id="download-json" class="small-btn" style="display:none">Download JSON</button>
+                    <button id="clear-all" class="small-btn" style="background:#f97316">Clear all</button>
+                </div>
+                <div class="muted">Exported format: top-level keys are node IDs. "answers" is a mapping of answer text →
+                    target node-id. Final nodes include "final": true and empty answers.</div>
+                <pre id="json-output">{
+                    "example-node": {
+                    "title": "...",
+                    "description": "...",
+                    "answers": {
+                    "this is an answer": "another-node"
+                    }
+                    }
+                    }</pre>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center">
+            <div class="muted">Preview of flow (textual):</div>
+            <div id="preview" class="muted"></div>
+        </div>
+    </main>
+
+    <script>
+        // Data model: map of nodeId -> {title,description,final,answers:[{text,target}]}
+        const nodes = {};
+        let selectedNodeId = null;
+
+        // helper: generate unique id
+        function genId() {
+            let i = 1; while (nodes['node-' + i]) i++; return 'node-' + i;
+        }
+
+        // DOM refs
+        const nodesListEl = document.getElementById('nodes-list');
+        const addNodeBtn = document.getElementById('add-node');
+        const newNodeIdInput = document.getElementById('new-node-id');
+        const editorForm = document.getElementById('editor-form');
+        const editorTitle = document.getElementById('editor-title');
+        const nodeIdInput = document.getElementById('node-id');
+        const nodeTitleInput = document.getElementById('node-title');
+        const nodeDescInput = document.getElementById('node-desc');
+        const nodeFinalCheckbox = document.getElementById('node-final');
+        const answersList = document.getElementById('answers-list');
+        const addAnswerBtn = document.getElementById('add-answer');
+        const exportBtn = document.getElementById('export-json');
+        const jsonOutput = document.getElementById('json-output');
+        const downloadBtn = document.getElementById('download-json');
+        const previewEl = document.getElementById('preview');
+        const removeNodeBtn = document.getElementById('remove-node');
+        const clearAllBtn = document.getElementById('clear-all');
+
+        function renderNodeList() {
+            nodesListEl.innerHTML = '';
+            Object.keys(nodes).forEach(id => {
+                const el = document.createElement('div');
+                el.className = 'node-btn' + (id === selectedNodeId ? ' selected' : '');
+                el.innerHTML = `<div><strong>${id}</strong><div class="muted">${nodes[id].title || 'no title'}</div></div><div style="display:flex;gap:6px"><button data-id="${id}" class="small-btn" title="Select">Edit</button></div>`;
+                el.querySelector('button').addEventListener('click', () => selectNode(id));
+                nodesListEl.appendChild(el);
+            });
+        }
+
+        function selectNode(id) {
+            selectedNodeId = id;
+            const node = nodes[id];
+            editorTitle.textContent = 'Edit: ' + id;
+            editorForm.style.display = 'block';
+            nodeIdInput.value = id;
+            nodeTitleInput.value = node.title;
+            nodeDescInput.value = node.description;
+            nodeFinalCheckbox.checked = !!node.final;
+            renderAnswers();
+            renderNodeList();
+        }
+
+        function renderAnswers() {
+            answersList.innerHTML = '';
+            const node = nodes[selectedNodeId];
+            if (!node) return;
+            if (node.final) {
+                document.getElementById('answers-section').style.display = 'none';
+            } else {
+                document.getElementById('answers-section').style.display = 'block';
+                node.answers.forEach((a, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'answer-row';
+                    const t = document.createElement('input');
+                    t.type = 'text'; t.value = a.text; t.placeholder = 'Answer text';
+                    t.addEventListener('input', (e) => {nodes[selectedNodeId].answers[idx].text = e.target.value;});
+                    const sel = document.createElement('select');
+                    const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '-- target node --'; sel.appendChild(emptyOpt);
+                    Object.keys(nodes).forEach(nid => {
+                        const opt = document.createElement('option'); opt.value = nid; opt.textContent = nid; if (nid === a.target) opt.selected = true; sel.appendChild(opt);
+                    });
+                    sel.addEventListener('change', (e) => {nodes[selectedNodeId].answers[idx].target = e.target.value;});
+                    const del = document.createElement('button'); del.textContent = '✖'; del.className = 'small-btn'; del.style.background = '#ef4444'; del.addEventListener('click', () => {nodes[selectedNodeId].answers.splice(idx, 1); renderAnswers();});
+                    row.appendChild(t); row.appendChild(sel); row.appendChild(del);
+                    answersList.appendChild(row);
+                });
+            }
+        }
+
+        addNodeBtn.addEventListener('click', () => {
+            let id = (newNodeIdInput.value || '').trim();
+            if (!id) id = genId();
+            if (nodes[id]) {alert('Node id already exists'); return;}
+            nodes[id] = {title: '', description: '', final: false, answers: []};
+            newNodeIdInput.value = '';
+            renderNodeList();
+            selectNode(id);
+            updatePreview();
+        });
+
+        addAnswerBtn.addEventListener('click', () => {
+            const node = nodes[selectedNodeId]; if (!node) return;
+            node.answers.push({text: '', target: ''}); renderAnswers();
+        });
+
+        nodeTitleInput.addEventListener('input', (e) => {if (!selectedNodeId) return; nodes[selectedNodeId].title = e.target.value; renderNodeList(); updatePreview();});
+        nodeDescInput.addEventListener('input', (e) => {if (!selectedNodeId) return; nodes[selectedNodeId].description = e.target.value; updatePreview();});
+        nodeFinalCheckbox.addEventListener('change', (e) => {
+            if (!selectedNodeId) return; nodes[selectedNodeId].final = e.target.checked; if (e.target.checked) nodes[selectedNodeId].answers = []; renderAnswers(); updatePreview();
+        });
+
+        removeNodeBtn.addEventListener('click', () => {
+            if (!selectedNodeId) return; if (!confirm('Delete node ' + selectedNodeId + '?')) return;
+            // remove references from other nodes' answers
+            Object.values(nodes).forEach(nd => {
+                nd.answers = nd.answers.filter(a => a.target !== selectedNodeId);
+            });
+            delete nodes[selectedNodeId]; selectedNodeId = null; editorForm.style.display = 'none'; renderNodeList(); updatePreview();
+        });
+
+        exportBtn.addEventListener('click', () => {
+            const out = buildExportJSON();
+            const pretty = JSON.stringify(out, null, 2);
+            jsonOutput.textContent = pretty;
+            // enable download
+            const blob = new Blob([pretty], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            downloadBtn.style.display = 'inline-block';
+            downloadBtn.onclick = () => {const a = document.createElement('a'); a.href = url; a.download = 'decision-tree.json'; a.click();};
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (!confirm('Clear all nodes?')) return;
+            for (const k of Object.keys(nodes)) delete nodes[k]; selectedNodeId = null; editorForm.style.display = 'none'; renderNodeList(); updatePreview(); jsonOutput.textContent = '{}'; downloadBtn.style.display = 'none';
+        });
+
+        function buildExportJSON() {
+            const result = {};
+            Object.keys(nodes).forEach(id => {
+                const n = nodes[id];
+                const obj = {title: n.title || '', description: n.description || '', answers: {}};
+                if (n.final) obj.final = true;
+                if (!n.final) {
+                    n.answers.forEach(a => {const text = (a.text || '').trim(); if (text) obj.answers[text] = a.target || null;});
+                }
+                result[id] = obj;
+            });
+            return result;
+        }
+
+        function updatePreview() {
+            const parts = Object.keys(nodes).map(id => {
+                const n = nodes[id];
+                if (n.final) return `${id} (FINAL) → [Retake Button]`;
+                const ans = n.answers.map(a => `["${a.text || '...'}" → ${a.target || '—'}]`).join(', ');
+                return `${id}: ${n.title || 'no title'} → ${ans}`;
+            });
+            previewEl.textContent = parts.join(' \n ');
+            // update selects in answers (so newly created nodes appear)
+            if (selectedNodeId) renderAnswers();
+        }
+
+        // keyboard: Enter in new-node-id to add
+        newNodeIdInput.addEventListener('keydown', (e) => {if (e.key === 'Enter') {addNodeBtn.click();} });
+
+        // Start with one sample node
+        (function init() {
+            const id = 'start'; nodes[id] = {title: 'Start here', description: 'This is the starting node.', final: false, answers: []};
+            const end = 'end'; nodes[end] = {title: 'Finish', description: 'Final node. Offers retake.', final: true, answers: []};
+            nodes[id].answers.push({text: 'Go to finish', target: end});
+            renderNodeList(); selectNode(id); updatePreview();
+        })();
+    </script>
+</body>
+
+</html>
