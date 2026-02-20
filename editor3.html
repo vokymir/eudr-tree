@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Decision Tree Editor — Draggable + JSON Sync</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: #0f172a;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --danger: #ef4444;
+            font-family: Inter, system-ui, Segoe UI, Roboto, Arial
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: linear-gradient(180deg, #0b1220, #071025);
+            color: #e6eef8
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            gap: 12px;
+            padding: 12px;
+            box-sizing: border-box
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .canvas {
+            flex: 1;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            overflow: auto
+        }
+
+        .json-panel {
+            width: 380px;
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column
+        }
+
+        h1 {
+            font-size: 15px;
+            margin: 6px 0
+        }
+
+        label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+            display: block
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: transparent;
+            color: inherit
+        }
+
+        textarea {
+            min-height: 70px
+        }
+
+        button {
+            border: 0;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #07203a;
+            cursor: pointer
+        }
+
+        .small {
+            font-size: 12px;
+            padding: 5px 8px
+        }
+
+        .nodes {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px
+        }
+
+        .node-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between
+        }
+
+        .answers-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 6px
+        }
+
+        /* graph */
+        .graph {
+            position: relative;
+            min-height: 100%;
+            padding: 40px
+        }
+
+        .node-card {
+            position: absolute;
+            min-width: 180px;
+            max-width: 240px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: grab;
+            user-select: none
+        }
+
+        .node-title {
+            font-weight: 700;
+            font-size: 13px
+        }
+
+        .node-desc {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .answer-pill {
+            font-size: 11px;
+            margin-top: 4px;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06)
+        }
+
+        .final {
+            margin-top: 6px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            background: #00b894;
+            color: #062b20;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        svg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none
+        }
+
+        .json-area {
+            flex: 1;
+            margin-top: 6px;
+            background: #0b1220;
+            border-radius: 8px;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow: auto;
+            white-space: pre
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- LEFT: single node editor -->
+        <div class="sidebar">
+            <h1>Nodes</h1>
+            <div style="display:flex;gap:6px">
+                <input id="new-id" placeholder="node id (optional)" />
+                <button id="add">Add</button>
+            </div>
+            <div class="nodes" id="node-list"></div>
+
+            <label>Selected</label>
+            <input id="edit-id" disabled />
+            <label>Title</label>
+            <input id="edit-title" />
+            <label>Description</label>
+            <textarea id="edit-desc"></textarea>
+            <label><input type="checkbox" id="edit-final" /> Final node</label>
+
+            <label>Answers (single-node editor)</label>
+            <div class="answers-editor" id="answers"></div>
+            <button id="add-answer" class="small">+ Answer</button>
+        </div>
+
+        <!-- CENTER: graph -->
+        <div class="canvas">
+            <div class="graph" id="graph">
+                <svg id="edges"></svg>
+            </div>
+        </div>
+
+        <!-- RIGHT: JSON bi-directional editor -->
+        <div class="json-panel">
+            <h1>JSON Editor (bi-directional)</h1>
+            <button id="export" class="small">Export</button>
+            <div id="json" class="json-area" contenteditable="true"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const nodes = {};
+        let selected = null;
+        const positions = {}; // draggable positions
+
+        const nodeList = document.getElementById('node-list');
+        const graph = document.getElementById('graph');
+        const edges = document.getElementById('edges');
+        const jsonArea = document.getElementById('json');
+
+        function genId() {let i = 1; while (nodes['node-' + i]) i++; return 'node-' + i}
+
+        // ---- Node CRUD ----
+        document.getElementById('add').onclick = () => {
+            const id = (document.getElementById('new-id').value || '').trim() || genId();
+            if (nodes[id]) return alert('id exists');
+            nodes[id] = {title: '', description: '', answers: {}};
+            positions[id] = {x: 200, y: Object.keys(nodes).length * 120};
+            renderAll();
+        }
+
+        function renderNodeList() {
+            nodeList.innerHTML = '';
+            Object.keys(nodes).forEach(id => {
+                const el = document.createElement('div');
+                el.className = 'node-item';
+                el.innerHTML = `<span>${id}</span>`;
+                el.onclick = () => selectNode(id);
+                nodeList.appendChild(el);
+            });
+        }
+
+        function selectNode(id) {
+            selected = id;
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-title').value = nodes[id].title || '';
+            document.getElementById('edit-desc').value = nodes[id].description || '';
+            document.getElementById('edit-final').checked = !!nodes[id].final;
+            renderAnswersEditor();
+        }
+
+        // ---- Editor bindings ----
+        document.getElementById('edit-title').oninput = e => {if (!selected) return; nodes[selected].title = e.target.value; syncJSON(); renderGraph()}
+        document.getElementById('edit-desc').oninput = e => {if (!selected) return; nodes[selected].description = e.target.value; syncJSON(); renderGraph()}
+        document.getElementById('edit-final').onchange = e => {if (!selected) return; if (e.target.checked) {nodes[selected].final = true; nodes[selected].answers = {}} else delete nodes[selected].final; renderAnswersEditor(); syncJSON(); renderGraph()}
+
+        document.getElementById('add-answer').onclick = () => {
+            if (!selected || nodes[selected].final) return;
+            nodes[selected].answers['new answer'] = '';
+            renderAnswersEditor(); syncJSON(); renderGraph();
+        }
+
+        function renderAnswersEditor() {
+            const box = document.getElementById('answers'); box.innerHTML = '';
+            if (!selected) return;
+            if (nodes[selected].final) {box.innerHTML = '<span style="font-size:12px;color:#94a3b8">Final node</span>'; return }
+            Object.entries(nodes[selected].answers || {}).forEach(([text, target]) => {
+                const row = document.createElement('div'); row.className = 'answer-row';
+                const t = document.createElement('input'); t.value = text;
+                const s = document.createElement('select');
+                const empty = document.createElement('option'); empty.value = ''; empty.textContent = '--'; s.appendChild(empty);
+                Object.keys(nodes).forEach(id => {const o = document.createElement('option'); o.value = id; o.textContent = id; if (id === target) o.selected = true; s.appendChild(o)});
+                t.oninput = e => {const val = e.target.value; delete nodes[selected].answers[text]; nodes[selected].answers[val] = target; renderAnswersEditor(); syncJSON(); renderGraph()}
+                s.onchange = e => {nodes[selected].answers[t.value] = e.target.value; syncJSON(); renderGraph()}
+                row.appendChild(t); row.appendChild(s); box.appendChild(row);
+            });
+        }
+
+        // ---- Graph ----
+        function renderGraph() {
+            graph.querySelectorAll('.node-card').forEach(n => n.remove());
+            edges.innerHTML = '';
+            Object.keys(nodes).forEach(id => {
+                if (!positions[id]) positions[id] = {x: 200, y: Object.keys(positions).length * 120};
+                const card = document.createElement('div'); card.className = 'node-card';
+                card.style.left = positions[id].x + 'px';
+                card.style.top = positions[id].y + 'px';
+                card.innerHTML = `<div class='node-title'>${id}</div><div class='node-desc'>${nodes[id].title || ''}</div>`;
+                if (nodes[id].final) card.innerHTML += `<div class='final'>FINAL</div>`;
+                else Object.entries(nodes[id].answers || {}).forEach(([t]) => {
+                    const p = document.createElement('div'); p.className = 'answer-pill'; p.textContent = t; card.appendChild(p);
+                });
+                makeDraggable(card, id);
+                graph.appendChild(card);
+            });
+            drawEdges();
+        }
+
+        function drawEdges() {
+            const rect = graph.getBoundingClientRect(); edges.setAttribute('width', rect.width); edges.setAttribute('height', rect.height);
+            Object.entries(nodes).forEach(([id, node]) => {
+                Object.entries(node.answers || {}).forEach(([text, target]) => {
+                    if (!target || !positions[target]) return;
+                    const p1 = positions[id]; const p2 = positions[target];
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const d = `M ${p1.x + 90} ${p1.y + 20} C ${p1.x + 200} ${p1.y}, ${p2.x - 50} ${p2.y}, ${p2.x} ${p2.y + 20}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('stroke', '#60a5fa');
+                    path.setAttribute('fill', 'none');
+                    edges.appendChild(path);
+                });
+            });
+        }
+
+        function makeDraggable(el, id) {
+            let offsetX, offsetY, drag = false;
+            el.onmousedown = e => {drag = true; offsetX = e.offsetX; offsetY = e.offsetY; el.style.cursor = 'grabbing'};
+            window.onmouseup = () => {drag = false; el.style.cursor = 'grab'};
+            window.onmousemove = e => {
+                if (!drag) return;
+                const rect = graph.getBoundingClientRect();
+                positions[id].x = e.clientX - rect.left - offsetX;
+                positions[id].y = e.clientY - rect.top - offsetY;
+                el.style.left = positions[id].x + 'px';
+                el.style.top = positions[id].y + 'px';
+                drawEdges();
+            }
+        }
+
+        // ---- JSON Sync ----
+        function syncJSON() {jsonArea.textContent = JSON.stringify(nodes, null, 2)}
+
+        jsonArea.oninput = () => {
+            try {
+                const parsed = JSON.parse(jsonArea.textContent);
+                Object.keys(nodes).forEach(k => delete nodes[k]);
+                Object.assign(nodes, parsed);
+                Object.keys(nodes).forEach((id, i) => {
+                    if (!positions[id]) positions[id] = {x: 200, y: i * 120};
+                });
+                renderAll();
+            } catch (e) { }
+        }
+
+        document.getElementById('export').onclick = () => {
+            const blob = new Blob([JSON.stringify(nodes, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'decision-tree.json'; a.click();
+        }
+
+        function renderAll() {renderNodeList(); renderGraph(); syncJSON()}
+
+        // init
+        nodes.start = {title: 'Start', description: '', answers: {'Go to end': 'end'}};
+        nodes.end = {title: 'End', description: '', final: true, answers: {}};
+        positions.start = {x: 200, y: 80};
+        positions.end = {x: 200, y: 240};
+        renderAll();
+    </script>
+</body>
+
+</html>

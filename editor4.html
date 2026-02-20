@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Decision Tree Editor — Vertical flow + JSON sync</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: #0f172a;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --danger: #ef4444;
+            font-family: Inter, system-ui, Segoe UI, Roboto, Arial
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: linear-gradient(180deg, #071025, #081122);
+            color: #e6eef8
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            gap: 12px;
+            padding: 12px;
+            box-sizing: border-box
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .canvas {
+            flex: 1;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            overflow: auto
+        }
+
+        .json-panel {
+            width: 380px;
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column
+        }
+
+        h1 {
+            font-size: 15px;
+            margin: 6px 0
+        }
+
+        label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+            display: block
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: transparent;
+            color: inherit
+        }
+
+        textarea {
+            min-height: 70px
+        }
+
+        button {
+            border: 0;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #07203a;
+            cursor: pointer
+        }
+
+        .small {
+            font-size: 12px;
+            padding: 5px 8px
+        }
+
+        /* graph */
+        .graph {
+            position: relative;
+            min-height: 100%;
+            padding: 40px
+        }
+
+        .node-card {
+            position: absolute;
+            min-width: 180px;
+            max-width: 240px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: grab;
+            user-select: none
+        }
+
+        .node-title {
+            font-weight: 700;
+            font-size: 13px
+        }
+
+        .node-desc {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .answer-pill {
+            font-size: 11px;
+            margin-top: 4px;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06)
+        }
+
+        .final {
+            margin-top: 6px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            background: #00b894;
+            color: #062b20;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        svg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none
+        }
+
+        .json-area {
+            flex: 1;
+            margin-top: 6px;
+            background: #0b1220;
+            border-radius: 8px;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow: auto;
+            white-space: pre
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 6px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- LEFT: only single-node editor (no list) -->
+        <div class="sidebar">
+            <h1>Node editor</h1>
+            <div style="display:flex;gap:6px">
+                <input id="new-id" placeholder="new node id (optional)" />
+                <button id="add">Add</button>
+            </div>
+
+            <label>Selected node id</label>
+            <input id="edit-id" disabled />
+            <label>Title</label>
+            <input id="edit-title" />
+            <label>Description</label>
+            <textarea id="edit-desc"></textarea>
+
+            <label>Answers (text → target)</label>
+            <div id="answers"></div>
+            <button id="add-answer" class="small">+ Answer</button>
+
+            <div style="margin-top:12px;display:flex;gap:8px">
+                <button id="delete" class="small" style="background:var(--danger);color:#fff">Delete node</button>
+                <button id="clear" class="small" style="background:#c2410c;color:#fff">Clear all</button>
+            </div>
+
+            <div style="margin-top:12px;color:var(--muted);font-size:12px">Tip: click a node in the canvas to select it.
+                Final nodes have no answers (no "final" field in JSON).</div>
+        </div>
+
+        <!-- CENTER: graph -->
+        <div class="canvas">
+            <div class="graph" id="graph">
+                <svg id="edges"></svg>
+            </div>
+        </div>
+
+        <!-- RIGHT: JSON bi-directional editor -->
+        <div class="json-panel">
+            <h1>JSON Editor (bi-directional)</h1>
+            <div style="display:flex;gap:8px">
+                <button id="export" class="small">Export</button>
+                <button id="format" class="small">Format</button>
+            </div>
+            <div id="json" class="json-area" contenteditable="true" spellcheck="false"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data structure: nodes[id] = { title:'', description:'', answers: { 'answer text': 'targetId', ... } }
+        const nodes = {};
+        const positions = {};
+        let selected = null;
+
+        const graph = document.getElementById('graph');
+        const edges = document.getElementById('edges');
+        const jsonArea = document.getElementById('json');
+
+        // LEFT refs
+        const addBtn = document.getElementById('add');
+        const newIdInput = document.getElementById('new-id');
+        const editId = document.getElementById('edit-id');
+        const editTitle = document.getElementById('edit-title');
+        const editDesc = document.getElementById('edit-desc');
+        const answersBox = document.getElementById('answers');
+        const addAnswerBtn = document.getElementById('add-answer');
+        const deleteBtn = document.getElementById('delete');
+        const clearBtn = document.getElementById('clear');
+        const exportBtn = document.getElementById('export');
+        const formatBtn = document.getElementById('format');
+
+        function genId() {let i = 1; while (nodes['node-' + i]) i++; return 'node-' + i}
+
+        // Add node
+        addBtn.onclick = () => {
+            const id = (newIdInput.value || '').trim() || genId();
+            if (nodes[id]) return alert('id exists');
+            nodes[id] = {title: '', description: '', answers: {}};
+            // default vertical spacing
+            positions[id] = {x: 200, y: Object.keys(positions).length * 140 + 80};
+            newIdInput.value = '';
+            selectNode(id);
+            renderAll();
+        }
+
+        // Select node (by clicking card)
+        function selectNode(id) {if (!nodes[id]) return; selected = id; editId.value = id; editTitle.value = nodes[id].title || ''; editDesc.value = nodes[id].description || ''; renderAnswersEditor();}
+
+        // Render answers editor (single-node)
+        function renderAnswersEditor() {
+            answersBox.innerHTML = ''; if (!selected) return; const a = nodes[selected].answers || {}; const keys = Object.keys(a); if (keys.length === 0) {const p = document.createElement('div'); p.style.color = 'var(--muted)'; p.textContent = '(no answers — terminal node)'; answersBox.appendChild(p); return;}
+            keys.forEach(k => {
+                const row = document.createElement('div'); row.className = 'answer-row';
+                const t = document.createElement('input'); t.value = k; t.placeholder = 'answer text';
+                const s = document.createElement('select'); const empty = document.createElement('option'); empty.value = ''; empty.textContent = '-- target --'; s.appendChild(empty);
+                Object.keys(nodes).forEach(id => {const o = document.createElement('option'); o.value = id; o.textContent = id; if (id === a[k]) o.selected = true; s.appendChild(o);});
+                const del = document.createElement('button'); del.textContent = '✖'; del.className = 'small'; del.style.background = 'var(--danger)'; del.style.color = '#fff';
+                // events
+                t.oninput = e => {
+                    const newText = e.target.value; if (newText === k) return; // rename key
+                    // preserve target
+                    const target = a[k]; delete nodes[selected].answers[k]; nodes[selected].answers[newText] = target; renderAnswersEditor(); syncJSON(); renderGraph();
+                };
+                s.onchange = e => {nodes[selected].answers[t.value] = e.target.value; syncJSON(); renderGraph();};
+                del.onclick = () => {delete nodes[selected].answers[k]; renderAnswersEditor(); syncJSON(); renderGraph();};
+                row.appendChild(t); row.appendChild(s); row.appendChild(del); answersBox.appendChild(row);
+            });
+        }
+
+        addAnswerBtn.onclick = () => {if (!selected) return; nodes[selected].answers['new answer'] = ''; renderAnswersEditor(); syncJSON(); renderGraph();}
+
+        // edit title/desc
+        editTitle.oninput = e => {if (!selected) return; nodes[selected].title = e.target.value; syncJSON(); renderGraph();}
+        editDesc.oninput = e => {if (!selected) return; nodes[selected].description = e.target.value; syncJSON(); renderGraph();}
+
+        deleteBtn.onclick = () => {
+            if (!selected) return; if (!confirm('Delete ' + selected + '?')) return; // remove references
+            Object.keys(nodes).forEach(id => {const newAns = {}; Object.entries(nodes[id].answers || {}).forEach(([text, target]) => {if (target !== selected) newAns[text] = target;}); nodes[id].answers = newAns;}); delete nodes[selected]; delete positions[selected]; selected = null; editId.value = ''; editTitle.value = ''; editDesc.value = ''; renderAll();
+        }
+
+        clearBtn.onclick = () => {if (!confirm('Clear all nodes?')) return; Object.keys(nodes).forEach(k => delete nodes[k]); Object.keys(positions).forEach(k => delete positions[k]); selected = null; renderAll();}
+
+        // ---- Graph rendering & dragging ----
+        function renderGraph() { // remove old cards
+            graph.querySelectorAll('.node-card').forEach(n => n.remove());
+            // ensure nodes have positions
+            Object.keys(nodes).forEach((id, i) => {if (!positions[id]) positions[id] = {x: 200 + (i % 2) * 200, y: i * 140 + 80};});
+            // create cards
+            Object.keys(nodes).forEach(id => {
+                const nd = nodes[id]; const card = document.createElement('div'); card.className = 'node-card'; card.dataset.id = id;
+                card.style.left = positions[id].x + 'px'; card.style.top = positions[id].y + 'px';
+                card.innerHTML = `<div class='node-title'>${escapeHtml(id)}</div><div class='node-desc'>${escapeHtml(nd.title || '')}</div>`;
+                const a = nd.answers || {};
+                const keys = Object.keys(a);
+                if (keys.length === 0) {const f = document.createElement('div'); f.className = 'final'; f.textContent = 'FINAL'; card.appendChild(f);}
+                else keys.forEach(k => {const p = document.createElement('div'); p.className = 'answer-pill'; p.textContent = k + (a[k] ? ' → ' + a[k] : ' → —'); card.appendChild(p);});
+                card.onclick = (e) => {e.stopPropagation(); selectNode(id);};
+                makeDraggable(card, id);
+                graph.appendChild(card);
+            });
+            drawEdges();
+        }
+
+        function drawEdges() { // clear first
+            edges.innerHTML = '';
+            const gRect = graph.getBoundingClientRect();
+            Object.entries(nodes).forEach(([id, nd]) => {
+                const srcEl = graph.querySelector(`.node-card[data-id="${cssEscape(id)}"]`);
+                if (!srcEl) return;
+                const srcRect = srcEl.getBoundingClientRect();
+                const startX = srcRect.left - gRect.left + srcRect.width / 2;
+                const startY = srcRect.top - gRect.top + srcRect.height; // bottom of source
+                Object.entries(nd.answers || {}).forEach(([text, target]) => {
+                    const tgtEl = graph.querySelector(`.node-card[data-id="${cssEscape(target)}"]`);
+                    if (!tgtEl) return;
+                    const tgtRect = tgtEl.getBoundingClientRect();
+                    const endX = tgtRect.left - gRect.left + tgtRect.width / 2;
+                    const endY = tgtRect.top - gRect.top; // top of target
+                    // create vertical bezier (bottom -> top)
+                    const midY = (startY + endY) / 2;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const d = `M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('stroke', '#60a5fa'); path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '2');
+                    edges.appendChild(path);
+                    // label
+                    if (text) {const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text'); txt.setAttribute('x', (startX + endX) / 2); txt.setAttribute('y', midY - 8); txt.setAttribute('font-size', '12'); txt.setAttribute('fill', '#cfe8ff'); txt.setAttribute('text-anchor', 'middle'); txt.textContent = text; edges.appendChild(txt);}
+                });
+            });
+        }
+
+        // simple css escape for attribute selector
+        function cssEscape(str) {return String(str).replace(/("|\)/g, '\$1');}
+
+        function makeDraggable(el, id) {
+            let dragging = false, offX = 0, offY = 0;
+            el.addEventListener('pointerdown', e => {dragging = true; el.setPointerCapture(e.pointerId); offX = e.clientX - el.getBoundingClientRect().left; offY = e.clientY - el.getBoundingClientRect().top; el.style.cursor = 'grabbing';});
+            window.addEventListener('pointerup', e => {if (dragging) {dragging = false; el.style.cursor = 'grab';} });
+            window.addEventListener('pointermove', e => {if (!dragging) return; const gr = graph.getBoundingClientRect(); positions[id].x = e.clientX - gr.left - offX; positions[id].y = e.clientY - gr.top - offY; el.style.left = positions[id].x + 'px'; el.style.top = positions[id].y + 'px'; drawEdges();});
+        }
+
+        // ---- JSON sync (bi-directional) ----
+        function syncJSON() { // write current nodes to JSON area (formatted)
+            jsonArea.textContent = JSON.stringify(nodes, null, 2);
+        }
+
+        // When user edits JSON: try to parse; if valid, replace nodes entirely
+        let jsonParseTimeout = null;
+        jsonArea.addEventListener('input', () => {
+            clearTimeout(jsonParseTimeout);
+            jsonParseTimeout = setTimeout(() => {
+                const text = jsonArea.textContent.trim();
+                if (!text) return;
+                try {
+                    const parsed = JSON.parse(text);
+                    // normalize: ensure shape node -> {title,description,answers}
+                    Object.keys(nodes).forEach(k => delete nodes[k]);
+                    Object.keys(positions).forEach(k => delete positions[k]);
+                    Object.entries(parsed).forEach(([id, obj], i) => {
+                        const title = obj.title || obj.t || '';
+                        const description = obj.description || obj.desc || '';
+                        // answers in input may be array? or object. We accept object mapping text->target
+                        const rawAnswers = obj.answers || obj.answer || {};
+                        const answers = {};
+                        if (Array.isArray(rawAnswers)) {
+                            // older formats — ignore; try to coerce if possible
+                        } else if (rawAnswers && typeof rawAnswers === 'object') {
+                            Object.entries(rawAnswers).forEach(([k, v]) => {answers[k] = v;});
+                        }
+                        nodes[id] = {title, description, answers};
+                        // keep position if present
+                        if (obj._pos && typeof obj._pos.x === 'number') positions[id] = obj._pos; else positions[id] = {x: 200 + (i % 2) * 200, y: i * 140 + 80};
+                    });
+                    // remove any "final" property abuse — final is implicit when answers empty
+                    Object.keys(nodes).forEach(k => {if (nodes[k].answers && Object.keys(nodes[k].answers).length === 0) { /* terminal */} });
+                    // re-render
+                    selected = Object.keys(nodes)[0] || null;
+                    renderAll();
+                } catch (err) { /* ignore parse errors while editing */}
+            }, 350);
+        });
+
+        // format JSON button
+        formatBtn.onclick = () => {try {const parsed = JSON.parse(jsonArea.textContent); jsonArea.textContent = JSON.stringify(parsed, null, 2);} catch (e) {alert('Invalid JSON');} }
+
+        // export
+        exportBtn.onclick = () => {const blob = new Blob([JSON.stringify(nodes, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'decision-tree.json'; a.click();}
+
+        // helper
+        function escapeHtml(s) {return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');}
+
+        // render all
+        function renderAll() {renderGraph(); syncJSON(); renderAnswersEditor();}
+
+        // initialize sample
+        nodes.start = {title: 'Start', description: 'Start node', answers: {'Go to mid': 'mid'}};
+        nodes.mid = {title: 'Middle', description: 'A branch', answers: {'Finish': 'end'}};
+        nodes.end = {title: 'End', description: 'Terminal', answers: {}};
+        positions.start = {x: 300, y: 80};
+        positions.mid = {x: 300, y: 260};
+        positions.end = {x: 300, y: 420};
+        selected = 'start';
+        renderAll();
+
+        // click on blank area to deselect
+        graph.addEventListener('click', () => {selected = null; editId.value = ''; editTitle.value = ''; editDesc.value = ''; answersBox.innerHTML = '';});
+
+    </script>
+</body>
+
+</html>

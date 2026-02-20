@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Decision Tree Editor — Single File</title>
+    <style>
+        :root {
+            --left-w: 300px;
+            --right-w: 420px;
+            --bg: #0f1720;
+            --panel: #0b1220;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --node-bg: #0ea5a4;
+            --node-fore: #072029;
+            --node-border: rgba(2, 6, 23, 0.6);
+            --shadow: 0 8px 24px rgba(2, 6, 23, 0.6);
+            color-scheme: dark;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, "Helvetica Neue", Arial
+        }
+
+        body {
+            display: grid;
+            grid-template-columns: var(--left-w) 1fr var(--right-w);
+            grid-template-rows: 56px 1fr;
+            gap: 12px;
+            background: linear-gradient(180deg, #071322 0%, #071a24 100%);
+            padding: 12px;
+            box-sizing: border-box;
+            color: #e6eef7;
+        }
+
+        header {
+            grid-column: 1/-1;
+            height: 56px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        header h1 {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 600
+        }
+
+        header .subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-left: 8px
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: var(--shadow);
+            overflow: auto;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        /* left sidebar */
+        .left {
+            grid-row: 2;
+            min-width: var(--left-w);
+            max-width: var(--left-w);
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .left h2 {
+            margin: 0 0 6px 0;
+            font-size: 14px
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.02);
+            color: inherit;
+            font-size: 13px;
+        }
+
+        textarea {
+            min-height: 70px;
+            resize: vertical
+        }
+
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .answer-row input[type=text] {
+            flex: 1
+        }
+
+        .answer-row select {
+            width: 160px
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--accent);
+            color: #04202b;
+            margin-top: 8px;
+        }
+
+        .btn.ghost {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--muted)
+        }
+
+        .danger {
+            background: #ef4444;
+            color: white
+        }
+
+        /* center canvas */
+        .center {
+            grid-row: 2;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .canvas-wrap {
+            flex: 1;
+            position: relative;
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.00));
+            overflow: hidden;
+        }
+
+        /* svg overlay for edges */
+        svg.edges {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .node {
+            position: absolute;
+            padding: 10px 12px;
+            border-radius: 10px;
+            min-width: 160px;
+            max-width: 260px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+            cursor: grab;
+            user-select: none;
+            transform-origin: left top;
+        }
+
+        .node.dragging {
+            cursor: grabbing;
+            opacity: 0.95
+        }
+
+        .node .nid {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        .node .title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #e8f9fb
+        }
+
+        .node .desc {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .node.selected {
+            outline: 3px solid rgba(96, 165, 250, 0.12);
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+            border-color: rgba(96, 165, 250, 0.16)
+        }
+
+        .node .bubble {
+            display: inline-block;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: var(--node-bg);
+            color: var(--node-fore);
+            font-weight: 700;
+            margin-right: 6px;
+            font-size: 12px;
+            border: 1px solid var(--node-border)
+        }
+
+        /* right panel */
+        .right {
+            grid-row: 2;
+            min-width: var(--right-w);
+            max-width: var(--right-w);
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .json-area {
+            height: 100%;
+            display: flex;
+            flex-direction: column
+        }
+
+        .json-area textarea {
+            flex: 1;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 12px
+        }
+
+        .json-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px
+        }
+
+        /* tiny helpers */
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .filled {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px;
+            border-radius: 8px
+        }
+
+        footer {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .note {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        .flex-gap {
+            display: flex;
+            gap: 8px
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>Decision Tree Editor</h1>
+            <div class="subtitle">Graphical editor — drag nodes, edit left, JSON right (in-sync)</div>
+        </div>
+        <div style="margin-left:auto" class="muted">Example loaded from uploaded file. See editor below.
+            :contentReference[oaicite:1]{index=1}</div>
+    </header>
+
+    <aside class="panel left">
+        <div>
+            <h2>Selected node</h2>
+            <div id="no-selection" class="muted">No node selected — click a node in the graph or create one below.</div>
+            <div id="node-editor" style="display:none">
+                <label>Node ID (readonly)</label>
+                <input type="text" id="edit-id" readonly />
+                <label>Title</label>
+                <input type="text" id="edit-title" />
+                <label>Description</label>
+                <textarea id="edit-desc"></textarea>
+
+                <label>Answers</label>
+                <div class="answers-list" id="answers-list"></div>
+
+                <div style="margin-top:8px" class="row">
+                    <button class="btn" id="add-answer-btn">Add answer</button>
+                    <button class="btn ghost" id="delete-node-btn">Delete node</button>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:12px 0">
+
+        <div>
+            <h2>Create node</h2>
+            <label>New node ID</label>
+            <input type="text" id="new-id" placeholder="e.g. my-new-node" />
+            <label>Title</label>
+            <input type="text" id="new-title" placeholder="A question or label" />
+            <label>Description (optional)</label>
+            <input type="text" id="new-desc" placeholder="Short description" />
+            <label><input type="checkbox" id="link-from-selected" /> Create answer from selected node to new
+                node</label>
+            <label style="display:block;margin-top:6px">Answer label (when linking)</label>
+            <input type="text" id="link-answer-label" placeholder="e.g. 'next', 'yes', 'no'">
+
+            <div class="row">
+                <button class="btn" id="create-node-btn">Create node</button>
+                <button class="btn ghost" id="auto-layout-btn">Auto-layout</button>
+            </div>
+            <div class="note">Positions (x,y) are stored in the JSON so node placement stays in-sync.</div>
+        </div>
+    </aside>
+
+    <main class="panel center">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div class="small muted">Canvas — drag nodes to reposition</div>
+            <div style="margin-left:auto" class="small muted">Click a node to select it</div>
+        </div>
+        <div class="canvas-wrap" id="canvas">
+            <svg class="edges" id="edges-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            <!-- nodes will be appended here -->
+        </div>
+    </main>
+
+    <aside class="panel right">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2 style="margin:0">JSON</h2>
+            <div class="small muted">Edit JSON and press Apply to load</div>
+        </div>
+
+        <div class="json-area">
+            <textarea id="json-text" spellcheck="false" aria-label="Decision tree JSON"></textarea>
+            <div class="json-controls">
+                <button class="btn" id="format-json">Format</button>
+                <button class="btn" id="apply-json">Apply</button>
+                <button class="btn" id="export-json">Export</button>
+                <button class="btn ghost" id="copy-json">Copy</button>
+                <div style="margin-left:auto" class="muted">Synchronous: UI → JSON (live). JSON → UI when you Apply.
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        /*
+          Decision Tree Editor - Single-file plain JS
+          - The editor stores nodes as an object: key -> { title, description, answers: {label: target}, x, y }
+          - Initial data is populated from the uploaded file (inlined below).
+          - Moving nodes updates x,y and updates the JSON textarea immediately.
+          - Editing the JSON and pressing Apply will re-load into the graph.
+        */
+
+        /* ---------- initial JSON (from uploaded file) ---------- */
+        const initialData = {
+            "start": {
+                "title": "Do you like coffe?",
+                "description": "Only truth.",
+                "answers": {
+                    "yes": "like-coffe",
+                    "no": "dont-like-coffe"
+                }
+            },
+            "like-coffe": {
+                "title": "What flavour of coffe?",
+                "description": "",
+                "answers": {
+                    "black coffe": "black-coffe",
+                    "latte": "latte",
+                    "turek": "turek"
+                }
+            },
+            "dont-like-coffe": {
+                "title": "Tea or gin?",
+                "description": "",
+                "answers": {
+                    "tea": "tea",
+                    "gin": "gin"
+                }
+            },
+            "tea": {
+                "title": "",
+                "description": "",
+                "answers": {
+                    "what are you": "otherman"
+                }
+            },
+            "gin": {
+                "title": "",
+                "description": "",
+                "answers": {
+                    "what are you": "otherman"
+                }
+            },
+            "black-coffe": {
+                "title": "",
+                "description": "",
+                "answers": {
+                    "what are you": "coffeman"
+                }
+            },
+            "latte": {
+                "title": "",
+                "description": "",
+                "answers": {
+                    "what are you": "coffeman"
+                }
+            },
+            "turek": {
+                "title": "",
+                "description": "",
+                "answers": {
+                    "what are you": "coffeman"
+                }
+            },
+            "coffeman": {
+                "title": "",
+                "description": "",
+                "answers": {}
+            },
+            "otherman": {
+                "title": "",
+                "description": "",
+                "answers": {}
+            }
+        };
+
+        /* ---------- app state ---------- */
+        let tree = {}; // will hold nodes with x,y
+        let selectedNodeId = null;
+        const canvas = document.getElementById('canvas');
+        const svg = document.getElementById('edges-svg');
+        const jsonText = document.getElementById('json-text');
+
+        /* DOM nodes */
+        const nodeEditor = document.getElementById('node-editor');
+        const noSelection = document.getElementById('no-selection');
+        const editId = document.getElementById('edit-id');
+        const editTitle = document.getElementById('edit-title');
+        const editDesc = document.getElementById('edit-desc');
+        const answersList = document.getElementById('answers-list');
+        const addAnswerBtn = document.getElementById('add-answer-btn');
+        const deleteNodeBtn = document.getElementById('delete-node-btn');
+
+        const newId = document.getElementById('new-id');
+        const newTitle = document.getElementById('new-title');
+        const newDesc = document.getElementById('new-desc');
+        const createNodeBtn = document.getElementById('create-node-btn');
+        const linkFromSelected = document.getElementById('link-from-selected');
+        const linkAnswerLabel = document.getElementById('link-answer-label');
+        const autoLayoutBtn = document.getElementById('auto-layout-btn');
+
+        /* ---------- helpers ---------- */
+        function deepClone(obj) {return JSON.parse(JSON.stringify(obj));}
+
+        function ensureXYs(nodes) {
+            // ensure each node has x,y; if missing, set to random-ish or layout
+            const keys = Object.keys(nodes);
+            let idx = 0;
+            keys.forEach(k => {
+                const node = nodes[k];
+                if (typeof node.x !== 'number' || typeof node.y !== 'number') {
+                    // spread out in grid
+                    const col = idx % 4;
+                    const row = Math.floor(idx / 4);
+                    node.x = 80 + col * 260;
+                    node.y = 60 + row * 140;
+                }
+                idx++;
+            });
+        }
+
+        /* ---------- load initial tree ---------- */
+        function loadFromRaw(raw) {
+            // raw is object mapping id-> {title,description,answers}
+            const nodes = {};
+            for (const id of Object.keys(raw)) {
+                const n = raw[id];
+                nodes[id] = {
+                    title: n.title || '',
+                    description: n.description || '',
+                    answers: n.answers ? deepClone(n.answers) : {},
+                    x: (n.x !== undefined ? n.x : undefined),
+                    y: (n.y !== undefined ? n.y : undefined)
+                };
+            }
+            ensureXYs(nodes);
+            tree = nodes;
+            selectedNodeId = null;
+            renderGraph();
+            updateJSONTextarea();
+        }
+
+        /* ---------- rendering ---------- */
+        function clearCanvas() {
+            // remove node elements
+            const prev = canvas.querySelectorAll('.node');
+            prev.forEach(p => p.remove());
+            // clear svg
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+        }
+        function renderGraph() {
+            clearCanvas();
+            // render edges first (we will draw lines in svg)
+            renderEdges();
+            // render nodes (as absolute divs)
+            for (const id of Object.keys(tree)) {
+                const node = tree[id];
+                const el = document.createElement('div');
+                el.className = 'node';
+                el.dataset.id = id;
+                el.style.left = (node.x || 0) + 'px';
+                el.style.top = (node.y || 0) + 'px';
+                el.innerHTML = `
+      <div class="nid">${escapeHtml(id)}</div>
+      <div class="title">${escapeHtml(node.title || '(no title)')}</div>
+      <div class="desc">${escapeHtml(node.description || '')}</div>
+    `;
+                canvas.appendChild(el);
+                makeNodeDraggable(el);
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    selectNode(id);
+                });
+                if (id === selectedNodeId) el.classList.add('selected');
+            }
+        }
+
+        function renderEdges() {
+            // helper to create arrow marker
+            ensureArrowMarker();
+            const entries = [];
+            for (const id of Object.keys(tree)) {
+                const node = tree[id];
+                for (const ansLabel of Object.keys(node.answers || {})) {
+                    const target = node.answers[ansLabel];
+                    if (!tree[target]) continue;
+                    entries.push({from: id, to: target, label: ansLabel});
+                }
+            }
+
+            // draw lines
+            for (const e of entries) {
+                const from = tree[e.from];
+                const to = tree[e.to];
+                const fx = (from.x || 0) + 110; // approx center of node (node width ~ >200)
+                const fy = (from.y || 0) + 36;
+                const tx = (to.x || 0) + 110;
+                const ty = (to.y || 0) + 36;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', 'rgba(255,255,255,0.06)');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('marker-end', 'url(#arrowhead)');
+                // compute nice cubic path with control points
+                const dx = Math.abs(tx - fx);
+                const midx = fx + (tx - fx) * 0.5;
+                const c1x = fx + Math.min(120, dx / 2);
+                const c2x = tx - Math.min(120, dx / 2);
+                const d = `M ${fx} ${fy} C ${c1x} ${fy} ${c2x} ${ty} ${tx} ${ty}`;
+                path.setAttribute('d', d);
+                svg.appendChild(path);
+
+                // label on path: use <textPath>
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('font-size', '12');
+                text.setAttribute('fill', 'rgba(255,255,255,0.9)');
+                const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+                const pid = 'p-' + e.from + '-' + e.to + '-' + sanitizeId(e.label);
+                path.id = pid; // path id used by textPath
+                tp.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#' + pid);
+                tp.setAttribute('startOffset', '50%');
+                tp.setAttribute('text-anchor', 'middle');
+                tp.textContent = e.label;
+                text.appendChild(tp);
+                svg.appendChild(text);
+            }
+        }
+
+        function ensureArrowMarker() {
+            if (svg.querySelector('#arrowhead')) return;
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '8');
+            marker.setAttribute('markerHeight', '8');
+            marker.setAttribute('refX', '6');
+            marker.setAttribute('refY', '4');
+            marker.setAttribute('orient', 'auto');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M0,0 L8,4 L0,8 L2,4 z');
+            path.setAttribute('fill', 'rgba(255,255,255,0.12)');
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+        }
+
+        /* ---------- node drag logic ---------- */
+        function makeNodeDraggable(el) {
+            let dragging = false;
+            let startX = 0, startY = 0;
+            let origX = 0, origY = 0;
+            const id = el.dataset.id;
+
+            el.addEventListener('pointerdown', (ev) => {
+                ev.preventDefault();
+                el.setPointerCapture(ev.pointerId);
+                dragging = true;
+                el.classList.add('dragging');
+                startX = ev.clientX;
+                startY = ev.clientY;
+                origX = parseFloat(el.style.left) || 0;
+                origY = parseFloat(el.style.top) || 0;
+            });
+
+            el.addEventListener('pointermove', (ev) => {
+                if (!dragging) return;
+                const dx = ev.clientX - startX;
+                const dy = ev.clientY - startY;
+                const nx = origX + dx;
+                const ny = origY + dy;
+                el.style.left = nx + 'px';
+                el.style.top = ny + 'px';
+                // update model live
+                if (tree[id]) {
+                    tree[id].x = nx;
+                    tree[id].y = ny;
+                    renderEdgesQuick();
+                    updateJSONTextarea(); // live sync
+                }
+            });
+
+            el.addEventListener('pointerup', (ev) => {
+                dragging = false;
+                try {el.releasePointerCapture(ev.pointerId);} catch (e) { }
+                el.classList.remove('dragging');
+                // final render (to avoid any tiny glitches)
+                renderEdges();
+            });
+
+            // prevent text selection while dragging
+            el.addEventListener('dragstart', e => e.preventDefault());
+        }
+
+        /* faster edges update without clearing nodes */
+        function renderEdgesQuick() {
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            renderEdges();
+        }
+
+        /* ---------- selection & left editor ---------- */
+        function selectNode(id) {
+            selectedNodeId = id;
+            updateLeftEditor();
+            // highlight selected node element
+            const nodes = canvas.querySelectorAll('.node');
+            nodes.forEach(n => n.classList.toggle('selected', n.dataset.id === id));
+        }
+
+        function updateLeftEditor() {
+            if (!selectedNodeId || !tree[selectedNodeId]) {
+                nodeEditor.style.display = 'none';
+                noSelection.style.display = 'block';
+                return;
+            }
+            nodeEditor.style.display = 'block';
+            noSelection.style.display = 'none';
+            const node = tree[selectedNodeId];
+            editId.value = selectedNodeId;
+            editTitle.value = node.title || '';
+            editDesc.value = node.description || '';
+            renderAnswersEditor(node);
+        }
+
+        function renderAnswersEditor(node) {
+            answersList.innerHTML = '';
+            const answers = node.answers || {};
+            const keys = Object.keys(answers);
+            if (keys.length === 0) {
+                const el = document.createElement('div');
+                el.className = 'muted'; el.textContent = '(no answers)';
+                answersList.appendChild(el);
+                return;
+            }
+            keys.forEach(label => {
+                const row = document.createElement('div'); row.className = 'answer-row';
+                const input = document.createElement('input'); input.type = 'text'; input.value = label;
+                input.addEventListener('input', () => {
+                    // change key: remove old, add new
+                    const val = answers[label];
+                    if (input.value === label) return;
+                    node.answers = node.answers || {};
+                    delete node.answers[label];
+                    node.answers[input.value] = val;
+                    updateJSONTextarea();
+                    renderAnswersEditor(node); // re-render editor to keep labels in sync
+                    renderGraph();
+                });
+                const select = document.createElement('select');
+                // populate all node ids
+                for (const nid of Object.keys(tree)) {
+                    const opt = document.createElement('option'); opt.value = nid; opt.textContent = nid;
+                    if (tree[nid] === undefined) continue;
+                    select.appendChild(opt);
+                }
+                select.value = answers[label];
+                select.addEventListener('change', () => {
+                    node.answers[label] = select.value;
+                    updateJSONTextarea();
+                    renderGraph();
+                });
+                const del = document.createElement('button'); del.className = 'btn ghost'; del.textContent = 'Del';
+                del.addEventListener('click', () => {
+                    delete node.answers[label];
+                    updateJSONTextarea();
+                    renderGraph();
+                    renderAnswersEditor(node);
+                });
+                row.appendChild(input); row.appendChild(select); row.appendChild(del);
+                answersList.appendChild(row);
+            });
+        }
+
+        /* left editor events */
+        editTitle.addEventListener('input', () => {
+            if (!selectedNodeId) return;
+            tree[selectedNodeId].title = editTitle.value;
+            renderGraph();
+            updateJSONTextarea();
+        });
+        editDesc.addEventListener('input', () => {
+            if (!selectedNodeId) return;
+            tree[selectedNodeId].description = editDesc.value;
+            renderGraph();
+            updateJSONTextarea();
+        });
+
+        addAnswerBtn.addEventListener('click', () => {
+            if (!selectedNodeId) return alert('Select a node first');
+            const label = prompt('Answer label (e.g. "yes", "no", "next")');
+            if (!label) return;
+            // choose target
+            const target = prompt('Target node id (existing) — type new id to create');
+            if (!target) return;
+            if (!tree[target]) {
+                // create new node with that id
+                tree[target] = {title: '', description: '', answers: {}, x: (tree[selectedNodeId].x || 0) + 220, y: (tree[selectedNodeId].y || 0) + 80};
+            }
+            tree[selectedNodeId].answers[label] = target;
+            updateJSONTextarea();
+            renderGraph();
+            updateLeftEditor();
+        });
+
+        deleteNodeBtn.addEventListener('click', () => {
+            if (!selectedNodeId) return;
+            if (!confirm('Delete node "' + selectedNodeId + '"? This will remove edges pointing to it.')) return;
+            // remove node and cleanup references
+            delete tree[selectedNodeId];
+            for (const id of Object.keys(tree)) {
+                const a = tree[id].answers || {};
+                for (const lab of Object.keys(a)) {
+                    if (a[lab] === selectedNodeId) delete a[lab];
+                }
+            }
+            selectedNodeId = null;
+            renderGraph();
+            updateJSONTextarea();
+            updateLeftEditor();
+        });
+
+        /* ---------- create node ---------- */
+        createNodeBtn.addEventListener('click', () => {
+            const id = (newId.value || '').trim();
+            if (!id) return alert('Please enter a node id');
+            if (tree[id]) return alert('Node id already exists');
+            const title = newTitle.value || '';
+            const desc = newDesc.value || '';
+            // position near selected or center
+            let x = 120, y = 80;
+            if (selectedNodeId && tree[selectedNodeId]) {
+                x = (tree[selectedNodeId].x || 0) + 220;
+                y = (tree[selectedNodeId].y || 0) + 80;
+            } else {
+                // center-ish
+                x = Math.max(40, canvas.clientWidth / 2 - 120);
+                y = Math.max(40, canvas.clientHeight / 2 - 30);
+            }
+            tree[id] = {title, description: desc, answers: {}, x, y};
+            if (linkFromSelected.checked && selectedNodeId) {
+                const lab = (linkAnswerLabel.value || 'next');
+                tree[selectedNodeId].answers = tree[selectedNodeId].answers || {};
+                tree[selectedNodeId].answers[lab] = id;
+            }
+            // clear form
+            newId.value = ''; newTitle.value = ''; newDesc.value = ''; linkAnswerLabel.value = '';
+            renderGraph();
+            updateJSONTextarea();
+        });
+
+        /* ---------- json sync and controls ---------- */
+        function exportJSON() {
+            const payload = buildExportJSON();
+            const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'decision-tree.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyJSONToClipboard() {
+            const payload = buildExportJSON();
+            navigator.clipboard && navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+                .then(() => alert('Copied JSON to clipboard'))
+                .catch(() => alert('Could not copy — your browser may block clipboard access.'));
+        }
+
+        function buildExportJSON() {
+            // return object mapping id-> {title,description,answers,x,y}
+            const out = {};
+            for (const id of Object.keys(tree)) {
+                out[id] = {
+                    title: tree[id].title || '',
+                    description: tree[id].description || '',
+                    answers: tree[id].answers || {},
+                    x: tree[id].x,
+                    y: tree[id].y
+                };
+            }
+            return out;
+        }
+
+        function updateJSONTextarea() {
+            // update textarea to reflect current tree (pretty)
+            const out = buildExportJSON();
+            jsonText.value = JSON.stringify(out, null, 2);
+        }
+
+        /* apply JSON from textarea into UI */
+        function applyJSON() {
+            let parsed;
+            try {
+                parsed = JSON.parse(jsonText.value);
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+                return;
+            }
+            // validate expected shape
+            const nodes = {};
+            for (const id of Object.keys(parsed)) {
+                const n = parsed[id];
+                if (!n || typeof n !== 'object' || typeof n.answers !== 'object') {
+                    alert('Invalid node structure for "' + id + '": each node should be an object with at least an "answers" object.');
+                    return;
+                }
+                nodes[id] = {
+                    title: n.title || '',
+                    description: n.description || '',
+                    answers: n.answers || {},
+                    x: (typeof n.x === 'number' ? n.x : undefined),
+                    y: (typeof n.y === 'number' ? n.y : undefined)
+                };
+            }
+            ensureXYs(nodes);
+            tree = nodes;
+            selectedNodeId = null;
+            renderGraph();
+            updateLeftEditor();
+            updateJSONTextarea();
+        }
+
+        /* format JSON in textarea */
+        document.getElementById('format-json').addEventListener('click', () => {
+            try {
+                const v = JSON.parse(jsonText.value);
+                jsonText.value = JSON.stringify(v, null, 2);
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+            }
+        });
+
+        document.getElementById('apply-json').addEventListener('click', applyJSON);
+        document.getElementById('export-json').addEventListener('click', exportJSON);
+        document.getElementById('copy-json').addEventListener('click', copyJSONToClipboard);
+
+        /* live JSON display updates - keep UI -> JSON live, but JSON -> UI only on Apply (prevents race) */
+        jsonText.addEventListener('input', () => {
+            // user editing JSON directly: don't overwrite while editing
+            // We detect if user hasn't modified (e.g., caret position), so we avoid stomping on user's typed JSON.
+            // No action here: apply on button.
+        });
+
+        /* click on canvas to deselect */
+        canvas.addEventListener('click', (ev) => {
+            selectedNodeId = null;
+            updateLeftEditor();
+            // remove selection highlight
+            const nodes = canvas.querySelectorAll('.node');
+            nodes.forEach(n => n.classList.remove('selected'));
+        });
+
+        /* ---------- utility functions ---------- */
+        function escapeHtml(s) {
+            return (s || '').toString().replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+        }
+
+        function sanitizeId(s) {
+            return (s || '').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-_]/g, '').toLowerCase();
+        }
+
+        /* ---------- auto-layout (simple BFS layering) ---------- */
+        function autoLayout() {
+            // simple force-free layering: starting from 'start' if present, otherwise arbitrary root
+            const nodes = Object.keys(tree);
+            if (nodes.length === 0) return;
+            const root = tree['start'] ? 'start' : nodes[0];
+            // BFS
+            const layers = [];
+            const visited = new Set();
+            const q = [[root, 0]];
+            while (q.length) {
+                const [id, depth] = q.shift();
+                if (visited.has(id)) continue;
+                visited.add(id);
+                if (!layers[depth]) layers[depth] = [];
+                layers[depth].push(id);
+                for (const lab of Object.keys(tree[id].answers || {})) {
+                    const t = tree[id].answers[lab];
+                    if (!visited.has(t)) q.push([t, depth + 1]);
+                }
+            }
+            // nodes not reached
+            nodes.forEach(id => {
+                if (!visited.has(id)) {
+                    if (!layers[0]) layers[0] = [];
+                    layers[0].push(id);
+                }
+            });
+            // assign coordinates per layer
+            const layerGapY = 140;
+            const nodeGapX = 220;
+            layers.forEach((layer, i) => {
+                const total = layer.length;
+                const startX = Math.max(60, (canvas.clientWidth - (total - 1) * nodeGapX) / 2);
+                layer.forEach((id, j) => {
+                    tree[id].x = startX + j * nodeGapX;
+                    tree[id].y = 40 + i * layerGapY;
+                });
+            });
+            renderGraph();
+            updateJSONTextarea();
+        }
+        autoLayoutBtn.addEventListener('click', autoLayout);
+
+        /* ---------- small utilities & boot ---------- */
+        function init() {
+            loadFromRaw(initialData);
+            // wire up edit propagation from answers changes: when we re-render left editor we call updateJSON
+            // wire up copy/export already done
+        }
+        init();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Decision Tree Editor — Graphical</title>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --danger: #fb7185;
+            --glass: rgba(255, 255, 255, 0.03);
+            font-family: Inter, system-ui, Segoe UI, Roboto, Arial
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(180deg, #0b1220 0%, #071025 100%);
+            color: #e6eef8
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            gap: 12px;
+            padding: 12px;
+            box-sizing: border-box
+        }
+
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 6px 30px rgba(2, 6, 23, 0.6)
+        }
+
+        h1 {
+            font-size: 16px;
+            margin: 6px 0
+        }
+
+        label {
+            font-size: 13px;
+            color: var(--muted);
+            display: block;
+            margin-top: 8px
+        }
+
+        input[type=text],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: transparent;
+            color: inherit
+        }
+
+        textarea {
+            min-height: 64px
+        }
+
+        .nodes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px
+        }
+
+        .node-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            background: var(--glass);
+            cursor: pointer
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px
+        }
+
+        button {
+            border: 0;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #07203a;
+            cursor: pointer
+        }
+
+        .small {
+            padding: 6px 8px;
+            font-size: 13px;
+            border-radius: 8px
+        }
+
+        /* Main canvas area */
+        .canvas {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+            overflow: auto
+        }
+
+        .graph-area {
+            position: relative;
+            min-height: 480px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.015), transparent);
+            border-radius: 8px;
+            padding: 24px
+        }
+
+        svg.connectors {
+            position: absolute;
+            inset: 0;
+            pointer-events: none
+        }
+
+        /* node card visuals — mostly CSS */
+        .node-card {
+            position: absolute;
+            min-width: 180px;
+            max-width: 240px;
+            padding: 12px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: transform .12s ease, box-shadow .12s
+        }
+
+        .node-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 50px rgba(2, 6, 23, 0.7)
+        }
+
+        .node-title {
+            font-weight: 700;
+            font-size: 14px
+        }
+
+        .node-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        .answers-quick {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .answer-pill {
+            display: inline-block;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 13px
+        }
+
+        .final-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #00b894 0%, #019267 100%);
+            color: #052117;
+            font-weight: 700
+        }
+
+        /* export area */
+        .export {
+            margin-top: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px;
+            border-radius: 8px;
+            max-height: 220px;
+            overflow: auto
+        }
+
+        /* responsive */
+        @media (max-width:900px) {
+            .sidebar {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <h1>Decision Tree — Editor</h1>
+            <div style="display:flex;gap:8px">
+                <input id="new-node-id" placeholder="node id (optional)" />
+                <button id="add-node">Add</button>
+            </div>
+
+            <label>Nodes</label>
+            <div class="nodes-list" id="nodes-list"></div>
+
+            <label>Edit node</label>
+            <div style="display:flex;gap:8px;align-items:center">
+                <input id="edit-node-id" disabled />
+                <button id="delete-node" class="small" style="background:var(--danger);color:#fff">Delete</button>
+            </div>
+            <label>Title</label>
+            <input id="edit-title" />
+            <label>Description</label>
+            <textarea id="edit-desc"></textarea>
+            <label><input id="edit-final" type="checkbox" /> Final node (terminal)</label>
+
+            <label>Answers (text → target)</label>
+            <div id="answers-editor"></div>
+            <div class="controls">
+                <button id="add-answer" class="small">+ Answer</button>
+                <button id="export" class="small">Export JSON</button>
+                <button id="clear" class="small" style="background:#ef4444;color:#fff">Clear</button>
+            </div>
+
+            <div class="export" id="export-box">{ }</div>
+        </aside>
+
+        <main class="canvas">
+            <div class="graph-area" id="graph-area">
+                <svg class="connectors" id="svg"></svg>
+                <!-- node cards will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Minimal JS: data model + DOM updates + simple layout & connector drawing
+        // Data model: nodes[id] = {title,description,final,answers:[{text,target}]}
+        const nodes = {};
+        let selected = null;
+
+        // DOM refs
+        const nodesList = document.getElementById('nodes-list');
+        const addNodeBtn = document.getElementById('add-node');
+        const newNodeIdInput = document.getElementById('new-node-id');
+        const editId = document.getElementById('edit-node-id');
+        const editTitle = document.getElementById('edit-title');
+        const editDesc = document.getElementById('edit-desc');
+        const editFinal = document.getElementById('edit-final');
+        const answersEditor = document.getElementById('answers-editor');
+        const addAnswerBtn = document.getElementById('add-answer');
+        const graphArea = document.getElementById('graph-area');
+        const svg = document.getElementById('svg');
+        const exportBox = document.getElementById('export-box');
+        const exportBtn = document.getElementById('export');
+        const deleteBtn = document.getElementById('delete-node');
+        const clearBtn = document.getElementById('clear');
+
+        function genId() {let i = 1; while (nodes['node-' + i]) i++; return 'node-' + i;}
+
+        function addNode(id) {id = id && id.trim() ? id.trim() : genId(); if (nodes[id]) {alert('id exists'); return;} nodes[id] = {title: '', description: '', final: false, answers: []}; renderNodes(); selectNode(id);}
+
+        addNodeBtn.addEventListener('click', () => addNode(newNodeIdInput.value));
+        newNodeIdInput.addEventListener('keydown', e => {if (e.key === 'Enter') addNode(newNodeIdInput.value);});
+
+        function renderNodes() {
+            nodesList.innerHTML = ''; for (const id of Object.keys(nodes)) {
+                const el = document.createElement('div'); el.className = 'node-row'; el.innerHTML = `<div><strong>${id}</strong><div style="font-size:12px;color:var(--muted)">${nodes[id].title || '—'}</div></div><div><button data-id="${id}" class="small">Edit</button></div>`;
+                el.querySelector('button').addEventListener('click', () => selectNode(id)); nodesList.appendChild(el);
+            } renderGraph();
+        }
+
+        function selectNode(id) {selected = id; editId.value = id; editTitle.value = nodes[id].title; editDesc.value = nodes[id].description; editFinal.checked = !!nodes[id].final; renderAnswersEditor();}
+
+        editTitle.addEventListener('input', () => {if (!selected) return; nodes[selected].title = editTitle.value; renderNodes(); renderGraph();});
+        editDesc.addEventListener('input', () => {if (!selected) return; nodes[selected].description = editDesc.value; renderGraph();});
+        editFinal.addEventListener('change', () => {if (!selected) return; nodes[selected].final = editFinal.checked; if (nodes[selected].final) nodes[selected].answers = []; renderAnswersEditor(); renderGraph();});
+
+        function renderAnswersEditor() {
+            answersEditor.innerHTML = ''; if (!selected) return; const n = nodes[selected]; if (n.final) {answersEditor.innerHTML = '<div style="color:var(--muted)">Final node — no answers</div>'; return;}
+            n.answers.forEach((a, idx) => {
+                const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '8px'; row.style.marginTop = '6px';
+                const input = document.createElement('input'); input.type = 'text'; input.placeholder = 'answer text'; input.value = a.text; input.addEventListener('input', e => {n.answers[idx].text = e.target.value; renderGraph();});
+                const sel = document.createElement('select'); const empty = document.createElement('option'); empty.value = ''; empty.textContent = '-- target --'; sel.appendChild(empty);
+                Object.keys(nodes).forEach(id => {const opt = document.createElement('option'); opt.value = id; opt.textContent = id; if (id === a.target) opt.selected = true; sel.appendChild(opt);});
+                sel.addEventListener('change', e => {n.answers[idx].target = e.target.value; renderGraph();});
+                const del = document.createElement('button'); del.textContent = '✖'; del.className = 'small'; del.style.background = '#ef4444'; del.style.color = '#fff'; del.addEventListener('click', () => {n.answers.splice(idx, 1); renderAnswersEditor(); renderGraph();});
+                row.appendChild(input); row.appendChild(sel); row.appendChild(del); answersEditor.appendChild(row);
+            });
+        }
+
+        addAnswerBtn.addEventListener('click', () => {if (!selected) return; nodes[selected].answers.push({text: '', target: ''}); renderAnswersEditor(); renderGraph();});
+
+        deleteBtn.addEventListener('click', () => {
+            if (!selected) return; if (!confirm('Delete ' + selected + '?')) return; // remove references
+            for (const id of Object.keys(nodes)) {nodes[id].answers = nodes[id].answers.filter(a => a.target !== selected);}
+            delete nodes[selected]; selected = null; editId.value = ''; editTitle.value = ''; editDesc.value = ''; renderNodes(); renderAnswersEditor(); renderGraph();
+        });
+
+        clearBtn.addEventListener('click', () => {if (!confirm('Clear all nodes?')) return; for (const k of Object.keys(nodes)) delete nodes[k]; selected = null; renderNodes(); renderAnswersEditor(); renderGraph(); exportBox.textContent = '{}';});
+
+        // --- Graph rendering: compute levels (BFS from roots), place nodes in rows, draw connectors ---
+        function computeLevels() {
+            // find nodes with no incoming edges -> roots
+            const incoming = {}; for (const id of Object.keys(nodes)) {incoming[id] = 0;}
+            for (const id of Object.keys(nodes)) {nodes[id].answers.forEach(a => {if (a.target && incoming[a.target] !== undefined) incoming[a.target]++;});}
+            const roots = Object.keys(incoming).filter(k => incoming[k] === 0);
+            const levels = {}; const visited = new Set(); let queue = [];
+            // if no explicit root, pick first node
+            if (roots.length === 0 && Object.keys(nodes).length > 0) queue.push(Object.keys(nodes)[0]); else queue.push(...roots);
+            queue.forEach(id => {levels[id] = 0; visited.add(id);});
+            // BFS
+            const q = [...queue]; while (q.length) {const cur = q.shift(); const depth = levels[cur]; nodes[cur].answers.forEach(a => {const t = a.target; if (!t || visited.has(t)) return; levels[t] = Math.max(levels[t] || 0, depth + 1); visited.add(t); q.push(t);});}
+            // any unvisited nodes (cycles) -> assign next levels
+            Object.keys(nodes).forEach(id => {if (!visited.has(id)) levels[id] = 0;});
+            return levels; // map id->level
+        }
+
+        function renderGraph() {
+            // clear existing node cards
+            // keep graph-area inner space and svg as overlay
+            // remove old cards
+            Array.from(graphArea.querySelectorAll('.node-card')).forEach(n => n.remove());
+            svg.innerHTML = '';
+            const levels = computeLevels();
+            // group nodes by level
+            const buckets = {};
+            Object.keys(nodes).forEach(id => {const L = levels[id] || 0; buckets[L] = buckets[L] || []; buckets[L].push(id);});
+            // layout grid: each level is a column; place nodes vertically with spacing
+            const colWidth = 260; const xPadding = 40; const yPadding = 40; const levelKeys = Object.keys(buckets).map(k => parseInt(k)).sort((a, b) => a - b);
+            const areaRect = graphArea.getBoundingClientRect();
+            // compute positions
+            const positions = {};
+            levelKeys.forEach((lvl, ci) => {
+                const col = buckets[lvl]; const cx = ci * colWidth + xPadding;
+                const total = col.length; const height = Math.max(320, total * 120);
+                col.forEach((id, ri) => {
+                    const cy = ri * 120 + yPadding;
+                    positions[id] = {x: cx, y: cy};
+                });
+            });
+
+            // create node cards DOM
+            for (const id of Object.keys(nodes)) {
+                const pos = positions[id] || {x: 0, y: 0}; const nd = nodes[id];
+                const card = document.createElement('div'); card.className = 'node-card'; card.style.left = pos.x + 'px'; card.style.top = pos.y + 'px'; card.dataset.id = id;
+                card.innerHTML = `<div class="node-title">${id} — ${escapeHtml(nd.title || '')}</div><div class="node-desc">${escapeHtml(nd.description || '')}</div>`;
+                const answersDiv = document.createElement('div'); answersDiv.className = 'answers-quick';
+                if (nd.final) {const b = document.createElement('div'); b.className = 'final-badge'; b.textContent = 'FINAL — Retake'; answersDiv.appendChild(b);}
+                else nd.answers.forEach(a => {const s = document.createElement('div'); s.className = 'answer-pill'; s.textContent = (a.text || '') + (a.target ? ' → ' + a.target : ' → —'); answersDiv.appendChild(s);});
+                card.appendChild(answersDiv);
+                card.addEventListener('click', () => selectNode(id));
+                graphArea.appendChild(card);
+            }
+
+            // after DOM nodes are in place, draw connectors using actual element centers
+            // small helper to get center coords relative to graphArea
+            function centerOf(el) {const r = el.getBoundingClientRect(); const g = graphArea.getBoundingClientRect(); return {x: r.left - g.left + r.width / 2, y: r.top - g.top + r.height / 2};}
+
+            // draw lines
+            for (const id of Object.keys(nodes)) {
+                const srcEl = graphArea.querySelector(`.node-card[data-id="${id}"]`);
+                if (!srcEl) continue;
+                const srcC = centerOf(srcEl);
+                nodes[id].answers.forEach(a => {
+                    if (!a.target || !nodes[a.target]) return;
+                    const tgtEl = graphArea.querySelector(`.node-card[data-id="${a.target}"]`);
+                    if (!tgtEl) return;
+                    const tgtC = centerOf(tgtEl);
+                    // build a simple bezier path
+                    const dx = Math.max(40, Math.abs(tgtC.x - srcC.x));
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const d = `M ${srcC.x} ${srcC.y} C ${srcC.x + dx} ${srcC.y}, ${tgtC.x - dx} ${tgtC.y}, ${tgtC.x} ${tgtC.y}`;
+                    path.setAttribute('d', d);
+                    path.setAttribute('stroke', 'rgba(96,165,250,0.9)'); path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '2');
+                    svg.appendChild(path);
+                    // add label as small text midway
+                    if (a.text) {const midX = (srcC.x + tgtC.x) / 2; const midY = (srcC.y + tgtC.y) / 2; const text = document.createElementNS('http://www.w3.org/2000/svg', 'text'); text.setAttribute('x', midX); text.setAttribute('y', midY - 8); text.setAttribute('font-size', '12'); text.setAttribute('fill', '#cfe8ff'); text.setAttribute('text-anchor', 'middle'); text.textContent = a.text; svg.appendChild(text);}
+                });
+            }
+
+            // set svg size to graphArea size
+            const rect = graphArea.getBoundingClientRect(); svg.setAttribute('width', rect.width); svg.setAttribute('height', rect.height);
+
+            // small helper to keep node cards visible on small canvas width
+            graphArea.style.minWidth = (levelKeys.length * colWidth + 120) + 'px';
+            // update export
+            exportBox.textContent = JSON.stringify(buildExport(), null, 2);
+        }
+
+        function escapeHtml(s) {return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');}
+
+        function buildExport() {const out = {}; for (const id of Object.keys(nodes)) {const n = nodes[id]; const obj = {title: n.title || '', description: n.description || '', answers: {}}; if (n.final) obj.final = true; if (!n.final) {n.answers.forEach(a => {if ((a.text || '').trim()) obj.answers[a.text.trim()] = a.target || null;});} out[id] = obj;} return out;}
+
+        exportBtn.addEventListener('click', () => {
+            const data = buildExport(); const pretty = JSON.stringify(data, null, 2); exportBox.textContent = pretty; // create downloadable blob
+            const blob = new Blob([pretty], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'decision-tree.json'; a.click(); URL.revokeObjectURL(url);
+        });
+
+        // init sample nodes
+        (function init() {nodes['start'] = {title: 'Start', description: 'Root node', final: false, answers: [{text: 'To finish', target: 'end'}]}; nodes['end'] = {title: 'Finish', description: 'Final node', final: true, answers: []}; nodes['alt'] = {title: 'Alternate', description: 'Another branch', final: false, answers: [{text: 'Finish', target: 'end'}]}; renderNodes(); selectNode('start'); renderGraph();})();
+
+        // recalc layout on resize
+        let resizeTO = null; window.addEventListener('resize', () => {clearTimeout(resizeTO); resizeTO = setTimeout(renderGraph, 120);});
+
+    </script>
+</body>
+
+</html>
