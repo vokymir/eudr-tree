@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Tree Visual Editor</title>
+    <style>
+        :root {
+            --bg: #1e1e1e;
+            --panel-bg: #2d2d2d;
+            --text: #ffffff;
+            --border: #444;
+            --accent: #3b82f6;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        #toolbar {
+            height: 50px;
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 10px;
+        }
+
+        button,
+        .file-upload-label {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        button:hover,
+        .file-upload-label:hover {
+            background: #2563eb;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .spacer {
+            flex-grow: 1;
+        }
+
+        /* Main Workspace */
+        #workspace {
+            display: flex;
+            flex-grow: 1;
+            height: calc(100vh - 50px);
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        .panel-header {
+            padding: 10px;
+            background: #252525;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Visual Canvas */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: auto;
+            background: #1a1a1a;
+        }
+
+        #edges {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5000px;
+            height: 5000px;
+            pointer-events: none;
+        }
+
+        .edge-path {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 3px;
+        }
+
+        #nodes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5000px;
+            height: 5000px;
+        }
+
+        .node {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            width: 220px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .node:active {
+            cursor: grabbing;
+        }
+
+        .node-header {
+            background: #333;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .node-id {
+            font-size: 12px;
+            color: #aaa;
+            font-family: monospace;
+        }
+
+        .node-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .node-body input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #111;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .node-answers {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .answer-row input {
+            font-size: 11px;
+        }
+
+        /* JSON Editor */
+        #json-input {
+            flex-grow: 1;
+            width: 100%;
+            background: #111;
+            color: #4af626;
+            border: none;
+            padding: 15px;
+            font-family: monospace;
+            resize: none;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        #json-input.error {
+            background: #3a1111;
+            color: #ff8888;
+        }
+
+        /* HTML Preview */
+        #html-preview {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="toolbar">
+        <strong>Decision Tree Editor</strong>
+        <div class="spacer"></div>
+        <button onclick="addNode()">+ Add Node</button>
+        <label class="file-upload-label">
+            Import JSON
+            <input type="file" accept=".json" onchange="importJSON(event)">
+        </label>
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="exportHTML()">Export HTML Application</button>
+    </div>
+
+    <div id="workspace">
+        <div class="panel" style="flex: 1.5;">
+            <div class="panel-header">Visual Editor (Drag to Move)</div>
+            <div id="canvas-container">
+                <svg id="edges"></svg>
+                <div id="nodes"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">JSON Source (Live)</div>
+            <textarea id="json-input" oninput="handleJSONEdit()"></textarea>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">App Preview</div>
+            <iframe id="html-preview"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Default Data Structure based on your prompt
+        let treeData = {
+            "start": {
+                "title": "Do you like coffe?",
+                "description": "Only truth.",
+                "answers": {"yes": "like-coffe", "no": "dont-like-coffe"}
+            },
+            "like-coffe": {
+                "title": "What flavour of coffe?",
+                "description": "",
+                "answers": {"black coffe": "black-coffe", "latte": "latte", "turek": "turek"}
+            },
+            "dont-like-coffe": {
+                "title": "Tea or gin?",
+                "description": "",
+                "answers": {"tea": "tea", "gin": "gin"}
+            },
+            "tea": {"title": "", "description": "", "answers": {"what are you": "otherman"}},
+            "gin": {"title": "", "description": "", "answers": {"what are you": "otherman"}},
+            "black-coffe": {"title": "", "description": "", "answers": {"what are you": "coffeman"}},
+            "latte": {"title": "", "description": "", "answers": {"what are you": "coffeman"}},
+            "turek": {"title": "", "description": "", "answers": {"what are you": "coffeman"}},
+            "coffeman": {"title": "You are a coffee man!", "description": "", "answers": {}},
+            "otherman": {"title": "You are an other man!", "description": "", "answers": {}}
+        };
+
+        let nodePositions = {};
+        let isDragging = false;
+        let draggedNodeId = null;
+        let dragOffset = {x: 0, y: 0};
+
+        // ==========================================
+        // CORE SYNC LOGIC
+        // ==========================================
+        function syncAll(source = 'data') {
+            if (source === 'data') {
+                document.getElementById('json-input').value = JSON.stringify(treeData, null, 2);
+                document.getElementById('json-input').classList.remove('error');
+            }
+            calculateTopDownLayout();
+            renderCanvas();
+            updateHTMLPreview();
+        }
+
+        function handleJSONEdit() {
+            try {
+                const newVal = document.getElementById('json-input').value;
+                treeData = JSON.parse(newVal);
+                document.getElementById('json-input').classList.remove('error');
+                calculateTopDownLayout();
+                renderCanvas();
+                updateHTMLPreview();
+            } catch (e) {
+                document.getElementById('json-input').classList.add('error');
+            }
+        }
+
+        // ==========================================
+        // VISUAL CANVAS LOGIC
+        // ==========================================
+        function calculateTopDownLayout() {
+            // Simple layout assignment for nodes that don't have positions yet
+            let levels = {'start': 0};
+            let queue = ['start'];
+            let processed = new Set();
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                if (processed.has(curr)) continue;
+                processed.add(curr);
+
+                let node = treeData[curr];
+                if (node && node.answers) {
+                    Object.values(node.answers).forEach(target => {
+                        if (levels[target] === undefined) {
+                            levels[target] = (levels[curr] || 0) + 1;
+                            queue.push(target);
+                        }
+                    });
+                }
+            }
+
+            // Assign physical coordinates
+            let levelCounts = {};
+            for (let id in treeData) {
+                if (!nodePositions[id]) {
+                    let lvl = levels[id] !== undefined ? levels[id] : 0;
+                    levelCounts[lvl] = (levelCounts[lvl] || 0) + 1;
+                    nodePositions[id] = {
+                        x: 50 + (levelCounts[lvl] - 1) * 250,
+                        y: 50 + lvl * 200
+                    };
+                }
+            }
+        }
+
+        function renderCanvas() {
+            const nodesContainer = document.getElementById('nodes');
+            const edgesSvg = document.getElementById('edges');
+
+            // Render Nodes
+            nodesContainer.innerHTML = '';
+            for (let id in treeData) {
+                let node = treeData[id];
+                let pos = nodePositions[id] || {x: 50, y: 50};
+
+                let answersHtml = Object.entries(node.answers || {}).map(([ansText, target]) => `
+      <div class="answer-row">
+        <input type="text" value="${ansText}" placeholder="Answer text" onchange="updateAnswer('${id}', '${ansText}', this.value, 'text')">
+        <input type="text" value="${target}" placeholder="Target ID" onchange="updateAnswer('${id}', '${ansText}', this.value, 'target')">
+      </div>
+    `).join('');
+
+                let nodeEl = document.createElement('div');
+                nodeEl.className = 'node';
+                nodeEl.id = `node-${id}`;
+                nodeEl.style.left = `${pos.x}px`;
+                nodeEl.style.top = `${pos.y}px`;
+                nodeEl.innerHTML = `
+      <div class="node-header" onmousedown="startDrag(event, '${id}')">
+        <span class="node-id">#${id}</span>
+        <button style="padding: 2px 5px; font-size: 10px;" onclick="addAnswer('${id}')">+ Ans</button>
+      </div>
+      <div class="node-body">
+        <input type="text" value="${node.title || ''}" placeholder="Title" onchange="updateNodeData('${id}', 'title', this.value)">
+        <input type="text" value="${node.description || ''}" placeholder="Description" onchange="updateNodeData('${id}', 'description', this.value)">
+        <div class="node-answers">${answersHtml}</div>
+      </div>
+    `;
+                nodesContainer.appendChild(nodeEl);
+            }
+
+            // Render Edges
+            let svgContent = '';
+            for (let id in treeData) {
+                let node = treeData[id];
+                if (!node.answers) continue;
+                let startPos = nodePositions[id];
+                if (!startPos) continue;
+
+                Object.values(node.answers).forEach(target => {
+                    let endPos = nodePositions[target];
+                    if (endPos) {
+                        // Curve from bottom of start node to top of end node
+                        let startX = startPos.x + 110; // Center of 220px width
+                        let startY = startPos.y + document.getElementById(`node-${id}`).offsetHeight;
+                        let endX = endPos.x + 110;
+                        let endY = endPos.y;
+
+                        let path = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+                        svgContent += `<path class="edge-path" d="${path}" />`;
+                    }
+                });
+            }
+            edgesSvg.innerHTML = svgContent;
+        }
+
+        // Node UI Interaction handlers
+        function updateNodeData(id, field, value) {
+            treeData[id][field] = value;
+            syncAll('data');
+        }
+
+        function updateAnswer(nodeId, oldAnsText, newValue, type) {
+            let answers = treeData[nodeId].answers;
+            if (type === 'text') {
+                let target = answers[oldAnsText];
+                delete answers[oldAnsText];
+                answers[newValue] = target;
+            } else {
+                answers[oldAnsText] = newValue;
+                // Auto-create node if target doesn't exist
+                if (!treeData[newValue]) {
+                    treeData[newValue] = {title: "", description: "", answers: {}};
+                }
+            }
+            syncAll('data');
+        }
+
+        function addAnswer(nodeId) {
+            treeData[nodeId].answers = treeData[nodeId].answers || {};
+            let newKey = "new answer " + (Object.keys(treeData[nodeId].answers).length + 1);
+            treeData[nodeId].answers[newKey] = "target-node";
+            if (!treeData["target-node"]) treeData["target-node"] = {title: "New Node", description: "", answers: {}};
+            syncAll('data');
+        }
+
+        function addNode() {
+            let id = "node_" + Date.now().toString().slice(-4);
+            treeData[id] = {title: "New Node", description: "", answers: {}};
+            syncAll('data');
+        }
+
+        // Drag functionality
+        function startDrag(e, id) {
+            isDragging = true;
+            draggedNodeId = id;
+            let pos = nodePositions[id];
+            dragOffset = {x: e.clientX - pos.x, y: e.clientY - pos.y};
+        }
+
+        document.addEventListener('mousemove', e => {
+            if (!isDragging || !draggedNodeId) return;
+            nodePositions[draggedNodeId].x = e.clientX - dragOffset.x;
+            nodePositions[draggedNodeId].y = e.clientY - dragOffset.y;
+
+            let el = document.getElementById(`node-${draggedNodeId}`);
+            el.style.left = nodePositions[draggedNodeId].x + 'px';
+            el.style.top = nodePositions[draggedNodeId].y + 'px';
+            renderCanvas(); // Redraw edges continuously
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedNodeId = null;
+        });
+
+        // ==========================================
+        // HTML GENERATOR & PREVIEW LOGIC
+        // ==========================================
+        function generateHTMLApp() {
+            let htmlSlides = Object.entries(treeData).map(([id, node]) => {
+                let btns = Object.entries(node.answers || {}).map(([ansText, targetId]) => {
+                    return `<a class="btn" href="#${targetId}">${ansText}</a>`;
+                }).join('\n  ');
+
+                return `<div class="slide" id="${id}">
+  <h2>${node.title || id}</h2>
+  ${node.description ? `<p>${node.description}</p>` : ''}
+  ${btns}
+</div>`;
+            }).join('\n\n');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generated Decision Tree</title>
+<style>
+  body {
+    margin: 0; font-family: Arial, sans-serif; background: #111; color: white; overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 40px; text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+  }
+  /* ONLY the targeted slide is visible */
+  .slide:target { opacity: 1; pointer-events: auto; }
+
+  /* Show start slide when no hash is present */
+  body:not(:has(.slide:target)) #start { opacity: 1; pointer-events: auto; }
+
+  h2 { font-size: 2rem; margin-bottom: 5px;}
+  p { color: #aaa; margin-top: 0; margin-bottom: 20px;}
+  .btn { padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+  .btn:hover { background: #2563eb; }
+</style>
+</head>
+<body>
+${htmlSlides}
+</body>
+</html>`;
+        }
+
+        function updateHTMLPreview() {
+            const iframe = document.getElementById('html-preview');
+            iframe.srcdoc = generateHTMLApp();
+        }
+
+        // ==========================================
+        // IMPORT / EXPORT LOGIC
+        // ==========================================
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(treeData, null, 2));
+            downloadFile(dataStr, "decision-tree.json");
+        }
+
+        function exportHTML() {
+            const htmlStr = "data:text/html;charset=utf-8," + encodeURIComponent(generateHTMLApp());
+            downloadFile(htmlStr, "app.html");
+        }
+
+        function downloadFile(data, filename) {
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", data);
+            anchor.setAttribute("download", filename);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    treeData = JSON.parse(e.target.result);
+                    nodePositions = {}; // reset layout
+                    syncAll('data');
+                } catch (err) {
+                    alert("Invalid JSON file");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Initialize application on load
+        window.onload = () => {
+            syncAll('data');
+        };
+    </script>
+</body>
+
+</html>
