@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kam po SŠ — EUDR</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg: #f9fcfb;
+  --h2: #1a365d;
+  --text: #2d3748;
+  --sub: #2d3748;
+  --res: #1a365d;
+  --rsub: #2d3748;
+  --btn-fg: #3182ce;
+  --btn-bg: rgba(49,130,206,0.1);
+  --btn-bdr: rgba(49,130,206,0.3);
+  --btn-hov: rgba(49,130,206,0.22);
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;padding:40px;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(10px)}
+.slide.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+h2{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:700;max-width:580px;line-height:1.35;color:var(--h2)}
+.sub{color:var(--sub);max-width:480px;line-height:1.8;font-size:1rem;margin:0}
+.ch{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:640px;margin-top:4px}
+.btn{padding:13px 28px;background:var(--btn-bg);color:var(--btn-fg);border:1.5px solid var(--btn-bdr);border-radius:10px;font-size:1rem;cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600}
+.btn:hover{background:var(--btn-hov);border-color:var(--btn-fg);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.btn.sec{background:transparent;color:var(--sub);border-color:rgba(0,0,0,0.12);font-size:.88rem;font-weight:400}
+.btn.sec:hover{background:rgba(0,0,0,.05);transform:none;box-shadow:none}
+.res{font-size:clamp(1.5rem,4.5vw,2.5rem);font-weight:700;color:var(--res);max-width:560px;line-height:1.25}
+.rsub{color:var(--rsub);font-size:1rem;max-width:460px;line-height:1.8;margin:0}
+</style>
+</head>
+<body>
+<div class="slide" id="slide-start">
+<h2>Jaký je tvůj hlavní cíl a plán po střední škole?</h2>
+<p class="sub">Vyber možnost, která nejlépe vystihuje, co chceš v životě dělat a jaký typ studia preferuješ.</p>
+<div class="ch"><button class="btn" onclick="go('vysoka-jista')">Chci určitě na VŠ a nevadí mi hodně teorie</button><button class="btn" onclick="go('maturita-praxe')">Chci maturitu a hned potom mít konkrétní profesi v ruce</button><button class="btn" onclick="go('chci-vyucnak')">Chci výuční list, žádné zdlouhavé učení z knih</button><button class="btn" onclick="go('umeni-sport')">Chci se naplno věnovat umění nebo vrcholovému sportu</button><button class="btn" onclick="go('pracovni-prostredi')">Zatím vůbec nevím, tápu</button></div>
+</div>
+<div class="slide" id="slide-vysoka-jista">
+<h2>Už víš zhruba, jaký obor bys chtěl na VŠ studovat?</h2>
+<p class="sub">Zvol, nakolik máš ujasněnou svou profesní budoucnost.</p>
+<div class="ch"><button class="btn" onclick="go('vztah-k-uceni')">Vůbec nevím, chci mít otevřené úplně všechny dveře</button><button class="btn" onclick="go('obor-smer')">Mám jen rámcovou představu, ale chci širší rozhled</button><button class="btn" onclick="go('maturita-praxe')">Vím to přesně, chci už na střední mít odborné předměty</button></div>
+</div>
+<div class="slide" id="slide-vztah-k-uceni">
+<h2>Jak moc tě baví se učit teoretické věci a biflovat se?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('gymnazium-vseobecne')">Baví mě to, mám rád/a výzvy a hodně teoretických předmětů</button><button class="btn" onclick="go('obor-smer')">Teorie mi nevadí, ale raději bych k tomu i nějakou praxi</button><button class="btn" onclick="go('maturita-praxe')">Učení z knížek mě moc nebaví, raději tvořím nebo zkoumám</button></div>
+</div>
+<div class="slide" id="slide-obor-smer">
+<h2>K jaké oblasti lidského vědění tě to nejvíce táhne?</h2>
+<p class="sub">Vyber obor, ve kterém bys chtěl jednou působit na úrovni vysokoškoláka (management, výzkum, projektování...).</p>
+<div class="ch"><button class="btn" onclick="go('lyceum-technicke')">Technika, stroje a IT</button><button class="btn" onclick="go('lyceum-prirodovedne')">Příroda, chemie, biologie, medicína</button><button class="btn" onclick="go('smer-humanitni')">Jazyky, historie, právo, společnost</button><button class="btn" onclick="go('lyceum-ekonomicke')">Ekonomika, peníze, management</button><button class="btn" onclick="go('lyceum-pedagogicke')">Učitelství, psychologie a práce s lidmi</button></div>
+</div>
+<div class="slide" id="slide-smer-humanitni">
+<h2>Co tě z humanitních oborů láká nejvíce?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('gymnazium-jazykove')">Cizí jazyky, literatura a překladatelství</button><button class="btn" onclick="go('sos-verejnasprava')">Právo, administrativa a veřejná správa</button><button class="btn" onclick="go('gymnazium-vseobecne')">Všeobecný přehled, dějepis, základy pro práva na VŠ</button></div>
+</div>
+<div class="slide" id="slide-maturita-praxe">
+<h2>Jaký obor nebo činnost tě nejvíce zajímá?</h2>
+<p class="sub">Chceš odbornou školu (SOŠ) zakončenou maturitou. Jaké zaměření tě láká?</p>
+<div class="ch"><button class="btn" onclick="go('smer-technika')">Počítače, technika, stroje, stavby</button><button class="btn" onclick="go('smer-ekonomika')">Peníze, obchod, byznys</button><button class="btn" onclick="go('smer-priroda')">Příroda, biologie, zemědělství, zdraví</button><button class="btn" onclick="go('smer-pedagogika-sluzby')">Práce s lidmi (školství, sociální sféra, služby)</button><button class="btn" onclick="go('pracovni-prostredi')">Pořád si nejsem jistý/á, nevyhranil/a jsem se</button></div>
+</div>
+<div class="slide" id="slide-smer-technika">
+<h2>Jsi spíše přes počítače nebo přes fyzické stroje a stavby?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('math-relation')">Rozhodně počítače a software</button><button class="btn" onclick="go('tech-fyzicka')">Stroje, elektrotechnika, motory</button><button class="btn" onclick="go('tech-stavba')">Domy, mosty, architektura, mapy</button><button class="btn" onclick="go('lyceum-technicke')">Zajímá mě vše, ale spíše teoreticky (chci pak na VŠ)</button></div>
+</div>
+<div class="slide" id="slide-math-relation">
+<h2>Jak jsi na tom s matematikou a logickým myšlením?</h2>
+<p class="sub">Pro IT obory je to celkem zásadní otázka.</p>
+<div class="ch"><button class="btn" onclick="go('gymnazium-prirodovedne')">Matika mi jde skvěle, baví mě složité algoritmy</button><button class="btn" onclick="go('sos-it')">Je to v pohodě, chci programovat a spravovat sítě</button><button class="btn" onclick="go('sos-it-grafika')">Nesnáším matiku, ale miluju počítačovou grafiku a design</button></div>
+</div>
+<div class="slide" id="slide-tech-fyzicka">
+<h2>Co tě fascinuje víc?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-elektro')">Elektrotechnika, tištěné spoje, inteligentní domácnosti</button><button class="btn" onclick="go('sos-strojirenska')">Strojírenství, CNC frézy, 3D tisk, konstrukce</button></div>
+</div>
+<div class="slide" id="slide-tech-stavba">
+<h2>Chceš domy navrhovat, nebo raději pracovat v terénu a zaměřovat?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-stavebni')">Navrhovat budovy a počítat materiály</button><button class="btn" onclick="go('sos-geodezie')">Geodézie, práce s mapami a katastrem</button></div>
+</div>
+<div class="slide" id="slide-smer-priroda">
+<h2>Zajímá tě spíše práce v laboratoři/nemocnici nebo s rostlinami/zvířaty venku?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('zdravotnictvi-vyber')">Lidé, zdraví, medicína, laboratoře</button><button class="btn" onclick="go('priroda-zemedelstvi')">Zvířata, rostliny, farmy, příroda</button><button class="btn" onclick="go('lyceum-prirodovedne')">Spíše vědecká biologie a chemie (cíl: přírodověda na VŠ)</button></div>
+</div>
+<div class="slide" id="slide-zdravotnictvi-vyber">
+<h2>Jak moc chceš být v přímém kontaktu s pacienty?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-zdravotnicka')">Chci o pacienty přímo pečovat (sestra/bratr)</button><button class="btn" onclick="go('sos-zdravotnicka-lab')">Raději zkumavky, vzorky nebo výroba zubních náhrad</button><button class="btn" onclick="go('gymnazium-vseobecne')">Mířím vysoko, chci být lékař/chirurg (nutná VŠ)</button></div>
+</div>
+<div class="slide" id="slide-priroda-zemedelstvi">
+<h2>Co z přírody je ti nejbližší?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-zemedelska')">Zemědělství, farmaření a pěstování</button><button class="btn" onclick="go('sos-veterinarni')">Léčení a péče o zvířata</button><button class="btn" onclick="go('sos-ekologicka')">Ekologie, lesnictví a ochrana životního prostředí</button></div>
+</div>
+<div class="slide" id="slide-smer-ekonomika">
+<h2>Jsi spíše na čísla a tabulky, nebo na komunikaci a prodej?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-ekonomika')">Čísla, účetnictví, finance, daně</button><button class="btn" onclick="go('sos-obchod')">Lidé, marketing, přesvědčování, vedení obchodu</button><button class="btn" onclick="go('lyceum-ekonomicke')">Obojí, ale spíše na teoretické úrovni (příprava na eko VŠ)</button></div>
+</div>
+<div class="slide" id="slide-smer-pedagogika-sluzby">
+<h2>S kým bys chtěl nejčastěji pracovat?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-pedagogicka')">S malými dětmi (učitel/ka v MŠ)</button><button class="btn" onclick="go('sos-socialni')">S lidmi, kteří potřebují sociální pomoc a péči</button><button class="btn" onclick="go('sos-hotelnictvi')">S hosty, turisty, v restauraci nebo hotelu</button><button class="btn" onclick="go('zdravotnictvi-vyber')">Raději půjdu do zdravotnictví pomáhat nemocným</button></div>
+</div>
+<div class="slide" id="slide-chci-vyucnak">
+<h2>Získání výučního listu trvá zpravidla 3 roky. Které řemeslo ti voní nejvíc?</h2>
+<p class="sub">Vyber si hrubý směr, kde chceš dělat rukama.</p>
+<div class="ch"><button class="btn" onclick="go('sou-kovo-elektro')">Auta, stroje, elektřina, kovovýroba</button><button class="btn" onclick="go('sou-stavba-drevo')">Dřevo, cihly, malta, instalatérství</button><button class="btn" onclick="go('sou-sluzby')">Péče o lidi a jejich vzhled (kadeřník, kosmetika)</button><button class="btn" onclick="go('sou-gastro-vyucnak')">Příprava jídla a pečení</button><button class="btn" onclick="go('sou-zemedelstvi')">Zemědělství, rostliny, venkovní práce</button><button class="btn" onclick="go('sou-umelecke')">Chci dělat umělecké předměty rukama</button></div>
+</div>
+<div class="slide" id="slide-umeni-sport">
+<h2>Jdeš cestou fyzického výkonu, nebo umělecké duše?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('gymnazium-sportovni')">Sport je můj život, chci i trénovat</button><button class="btn" onclick="go('konzervator')">Hudba, zpěv, tanec, herectví</button><button class="btn" onclick="go('sos-umelecka')">Kreslení, malba, užitý design, fotografie</button><button class="btn" onclick="go('sou-umelecke')">Rukodělné umění (keramika, umělecké kovářství)</button></div>
+</div>
+<div class="slide" id="slide-pracovni-prostredi">
+<h2>Pojďme na to od lesa. Kde bys chtěl/a nejraději trávit svůj běžný pracovní den?</h2>
+<p class="sub">Zkus si představit svou ideální práci za 10 let.</p>
+<div class="ch"><button class="btn" onclick="go('kancelar-pc')">V kanceláři, u stolu, s počítačem</button><button class="btn" onclick="go('venku-prace')">Venku v přírodě nebo v terénu na stavbách</button><button class="btn" onclick="go('dilna-lab-nem')">V dílně, laboratoři, nemocnici nebo kuchyni</button><button class="btn" onclick="go('mezi-lidmi')">Neustále mezi spoustou lidí, komunikovat, obsluhovat</button></div>
+</div>
+<div class="slide" id="slide-kancelar-pc">
+<h2>A co přesně bys v té kanceláři u PC chtěl/a dělat?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('math-relation')">Programovat, psát kód, tvořit weby</button><button class="btn" onclick="go('sos-it-grafika')">Kreslit grafiku, tvořit videa a design</button><button class="btn" onclick="go('sos-ekonomika')">Počítat peníze, řešit účetnictví a byznys</button><button class="btn" onclick="go('sos-verejnasprava')">Řešit zákony, smlouvy a papírování pro státní správu</button><button class="btn" onclick="go('sos-obchod')">Tvořit marketing a obchodovat</button></div>
+</div>
+<div class="slide" id="slide-venku-prace">
+<h2>Láká tě venku spíše příroda, nebo budování něčeho nového?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('priroda-zemedelstvi')">Rostliny, ekologie a zvířata s maturitou</button><button class="btn" onclick="go('sou-zemedelstvi')">Chci farmařit a pracovat venku manuálně (výuční list)</button><button class="btn" onclick="go('tech-stavba')">Stavět, navrhovat a zaměřovat budovy s maturitou</button><button class="btn" onclick="go('sou-stavba-drevo')">Manuální stavba rukama (zedník, tesař, pokrývač)</button></div>
+</div>
+<div class="slide" id="slide-dilna-lab-nem">
+<h2>Co bys v této laboratoři/dílně držel v ruce jako svůj nástroj?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('zdravotnictvi-vyber')">Zkumavky, pipety nebo zubařské nástroje</button><button class="btn" onclick="go('sos-elektro')">Páječku, měřicí přístroje a plošné spoje</button><button class="btn" onclick="go('sos-strojirenska')">Kladivo, klíče, popřípadě programování pro CNC stroj</button><button class="btn" onclick="go('smer-gastro')">Vařečku, nože a potraviny</button></div>
+</div>
+<div class="slide" id="slide-mezi-lidmi">
+<h2>Jaká by byla tvoje hlavní role vůči těmto lidem?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('smer-pedagogika-sluzby')">Vychovávat je, starat se o děti nebo o seniory</button><button class="btn" onclick="go('sos-obchod')">Kecat s nimi, prodávat jim věci, přesvědčovat je</button><button class="btn" onclick="go('sou-sluzby')">Pečovat o jejich účes, pleť a vzhled (výuční list)</button><button class="btn" onclick="go('smer-gastro')">Obsluhovat je, vařit jim, pracovat v hotelu</button></div>
+</div>
+<div class="slide" id="slide-smer-gastro">
+<h2>Chceš se učit jazyky, management hotelu a mít maturitu, nebo hned vařit a péct s výučním listem?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos-hotelnictvi')">Management, hotelnictví a turismus (Maturita)</button><button class="btn" onclick="go('sou-gastro-vyucnak')">Kuchař, číšník, cukrář (Výuční list)</button></div>
+</div>
+<div class="slide" id="slide-gymnazium-vseobecne">
+<div class="res">Gymnázium (Všeobecné)</div>
+<p class="rsub">Získáš obrovský všeobecný přehled, naučíš se cizí jazyky a perfektně se připravíš na vysokou školu. Je to ideální volba, pokud chceš jít na práva, medicínu, psychologii či jiné humanitní obory. Nezískáš ale žádnou konkrétní profesi ihned po maturitě, s VŠ se v podstatě počítá.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-gymnazium-prirodovedne">
+<div class="res">Gymnázium (Přírodovědné / Matematické)</div>
+<p class="rsub">Kromě všeobecného přehledu získáš brutální průpravu v matematice, fyzice, chemii a biologii. Špičkový odrazový můstek pro ČVUT, MFF UK, medicínu nebo vědecký výzkum.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-gymnazium-jazykove">
+<div class="res">Gymnázium (Jazykové)</div>
+<p class="rsub">Tvé zaměření bude silně humanitní. Naučíš se plynule 2 až 3 cizí jazyky. Ideální jako příprava na studium filologie, překladatelství nebo mezinárodních vztahů na VŠ.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-gymnazium-sportovni">
+<div class="res">Sportovní gymnázium</div>
+<p class="rsub">Studium pro vrcholové a poloprofesionální sportovce. Škola má přizpůsobený rozvrh, aby žáci stíhali tréninky a soustředění. Často vede na Fakultu tělesné výchovy a sportu (FTVS).</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-lyceum-technicke">
+<div class="res">Technické lyceum</div>
+<p class="rsub">Něco mezi gymnáziem a průmyslovkou. Získáš skvělé znalosti matematiky a přírodních věd, ale okusíš i základy IT a strojírenství. Perfektní jako příprava na technické VŠ, pokud se ještě nechceš profilovat jen do jednoho inženýrského oboru.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-lyceum-prirodovedne">
+<div class="res">Přírodovědné lyceum</div>
+<p class="rsub">Kompromis pro ty, kteří milují chemii, biologii a ekologii a chtějí na VŠ, ale chtějí si sáhnout i na odborné předměty a do laboratoře dřív než až na vysoké.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-lyceum-ekonomicke">
+<div class="res">Ekonomické lyceum</div>
+<p class="rsub">Obsahuje hodně ekonomiky, účetnictví a jazyků, ale zároveň velkou porci všeobecně vzdělávacích předmětů. Vytvořeno primárně pro studenty mířící na VŠE a ekonomické fakulty.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-lyceum-pedagogicke">
+<div class="res">Pedagogické lyceum</div>
+<p class="rsub">Oproti odborné pedagogické škole (pro učitelky v MŠ) tě toto lyceum připraví spíše na studium učitelství pro 1. a 2. stupeň ZŠ, střední školy nebo psychologii a speciální pedagogiku na VŠ.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-it">
+<div class="res">SOŠ - Informační technologie</div>
+<p class="rsub">Kódování, databáze, počítačové sítě a hardware. Po maturitě můžeš jít s klidem rovnou pracovat jako junior programátor či ajťák, ale drtivá většina absolventů pokračuje na technické VŠ.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-it-grafika">
+<div class="res">SOŠ - IT a Počítačová grafika</div>
+<p class="rsub">Mix technologií a kreativity. Naučíš se pracovat v Adobe Creative Cloud, 3D modelování, tvorbu webů po vizuální stránce a animace. Ideální pro budoucí webaře, designéry a multimediální tvůrce.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-elektro">
+<div class="res">SOŠ - Elektrotechnika</div>
+<p class="rsub">Slaboproud, silnoproud, automatizace, robotika, internet věcí. Obor, u kterého je po maturitě prakticky 100% zaměstnanost a velké peníze. Nebo výborný odraz pro ČVUT FEL.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-strojirenska">
+<div class="res">SOŠ - Strojírenství</div>
+<p class="rsub">Konstruování v CAD softwarech, znalost materiálů, mechaniky a programování CNC obráběcích strojů. Páteř českého průmyslu s okamžitým uplatněním.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-stavebni">
+<div class="res">SOŠ - Stavebnictví a Architektura</div>
+<p class="rsub">Budeš rýsovat, kreslit v CADu, počítat statiku a navrhovat budovy od sklepa po střechu. Vede tě na profesi stavebního dozoru, projektanta nebo na VŠ Architektury / Stavební fakultu.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-geodezie">
+<div class="res">SOŠ - Geodézie a Katastr nemovitostí</div>
+<p class="rsub">Velmi specifický technický obor. Půl dne strávíš v terénu s měřickým přístrojem (teodolitem) a půl dne v kanceláři u zpracování dat do map a katastru.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-zdravotnicka">
+<div class="res">SZŠ - Praktická sestra (Zdravotnický asistent)</div>
+<p class="rsub">Odborná škola připravující personál do nemocnic a pečovatelských zařízení. Hned po maturitě máš cenné povolání v kapse. Nebo můžeš pokračovat na VŠ na obor Všeobecná sestra nebo záchranářství.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-zdravotnicka-lab">
+<div class="res">SZŠ - Laboratorní asistent / Asistent zubního technika</div>
+<p class="rsub">Zdravotnický obor bez přímého neustálého kontaktu s pacienty. Budeš vyšetřovat vzorky krve, tkání, mikrobiologii nebo modelovat zubní náhrady. Často spojeno s chemií.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-zemedelska">
+<div class="res">SOŠ - Agropodnikání</div>
+<p class="rsub">Rostlinná výroba, chov zvířat a řízení farmy s přesahem do ekonomiky. Naučíš se, jak funguje moderní zemědělství a jak ho dělat profitabilně a udržitelně.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-veterinarni">
+<div class="res">SOŠ - Veterinární prevence</div>
+<p class="rsub">Péče o malá i hospodářská zvířata. Budeš asistovat veterinárnímu lékaři nebo pracovat v zoo či záchranných stanicích. Velmi těžká biologie, připravuje na studium veteriny na VŠ.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-ekologicka">
+<div class="res">SOŠ - Ochrana přírody a prostředí</div>
+<p class="rsub">Skloubení chemie, biologie a práva. Jak správně zacházet s odpady, měřit znečištění ovzduší, chránit krajinu a prosazovat environmentální zákony.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-verejnasprava">
+<div class="res">SOŠ - Veřejnosprávní činnost</div>
+<p class="rsub">Příprava na práci úředníka na ministerstvech, obcích, úřadech práce či soudech. Hodně práva, administrativy a psaní všech možných úředních listin.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-ekonomika">
+<div class="res">SOŠ - Obchodní akademie (Finance, Účetnictví)</div>
+<p class="rsub">Těžká ekonomika, účetnictví, daně, psaní všemi deseti, ekonomický software. Velmi žádáný profil pro korporace, banky a jakoukoliv velkou firmu ihned po maturitě.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-obchod">
+<div class="res">SOŠ - Ekonomika a podnikání / Management obchodu</div>
+<p class="rsub">Více zaměřeno na obchodování, marketing, komunikaci se zákazníkem a reálné zakládání firem. Často obnáší fiktivní firmy a měkčí dovednosti než suchá Obchodní akademie.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-pedagogicka">
+<div class="res">SPgŠ - Předškolní a mimoškolní pedagogika</div>
+<p class="rsub">Učíš se hrát na hudební nástroj, zpívat, tvořit, mluvit a psychologii malých dětí. S touto maturitou můžeš okamžitě pracovat jako učitel/ka v mateřské škole nebo vychovatel/ka v družině.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-socialni">
+<div class="res">SOŠ - Sociální činnost</div>
+<p class="rsub">Kombinace pedagogiky, psychologie a částečně zdravotnictví. Vede k povolání sociálního pracovníka v domovech důchodců, dětských domovech, ústavech či azylových centrech.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-hotelnictvi">
+<div class="res">SOŠ - Hotelnictví a cestovní ruch</div>
+<p class="rsub">Práce s lidmi, plynulé jazyky, znalost kultury stolování, organizování akcí a řízení chodu hotelu nebo cestovní kanceláře. Atraktivní obor s nutností slušného vystupování.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sos-umelecka">
+<div class="res">SUŠ - Střední uměleckoprůmyslová škola</div>
+<p class="rsub">Obory jako průmyslový design, grafický design, fotografie, oděvní tvorba, nebo bytová architektura. Často se dělají náročné talentové zkoušky už v lednu!</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-konzervator">
+<div class="res">Konzervatoř</div>
+<p class="rsub">Specifický typ 6leté školy zakončený titulem DiS. (Diplomovaný specialista). Maximální zaměření na hudební nástroj, klasický i moderní zpěv, tanec nebo herectví. Projde jen úzké procento s velkým talentem.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-kovo-elektro">
+<div class="res">SOU (Výuční list) - Stroje, kovy, elektřina</div>
+<p class="rsub">Obory jako Automechanik, Elektrikář-silnoproud, Obráběč kovů (CNC), Zámečník. Zlaté české ručičky, na které se čekají dlouhé měsíce a trh je dokáže královsky zaplatit.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-stavba-drevo">
+<div class="res">SOU (Výuční list) - Stavby a dřevo</div>
+<p class="rsub">Obory jako Truhlář, Tesař, Zedník, Instalatér, Malíř. Pokud máš sílu a šikovnost, po vyučení se můžeš okamžitě vrhnout do podnikání a nabízet řemeslo, po kterém je obrovský hlad.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-sluzby">
+<div class="res">SOU (Výuční list) - Osobní služby</div>
+<p class="rsub">Obory jako Kadeřník, Kosmetické služby, Prodavač, Masér. Přímý kontakt se zákazníky, práce vyžadující pečlivost, zručnost a příjemné vystupování.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-gastro-vyucnak">
+<div class="res">SOU (Výuční list) - Gastronomie</div>
+<p class="rsub">Obory jako Kuchař, Číšník, Cukrář, Pekař. Tříletý praktický výcvik, kde strávíš půlku studia v reálných provozech restaurací a hotelů.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-zemedelstvi">
+<div class="res">SOU (Výuční list) - Zemědělství a příroda</div>
+<p class="rsub">Obory jako Zahradník, Farmář, Opravář zemědělských strojů, Lesní mechanizátor. Jsi denně v kontaktu s přírodou, učíš se obsluhovat traktory a starat se o plodiny/zvířata.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<div class="slide" id="slide-sou-umelecke">
+<div class="res">SOU (Výuční list) - Umělecká řemesla</div>
+<p class="rsub">Obory jako Umělecký kovář, Keramik, Sklenář, Truhlář-restaurátor. Úžasná práce, kde spojuješ manuální řemeslnou tvrdost a umělecké cítění pro detail a krásu.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zkusit jinou cestu</button>
+</div>
+<script>
+function go(id){
+  document.querySelectorAll('.slide').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('slide-'+id);
+  if(el)el.classList.add('active');
+}
+go('start');
+</script>
+</body>
+</html>

@@ -1,0 +1,596 @@
+{
+  "start": {
+    "title": "Co plánuješ dělat po ukončení základní školy?",
+    "description": "Tento strom ti pomůže zúžit možnosti — gymnázium, učňák, SOŠ, odborné kurzy, nebo 'gap year'.",
+    "answers": {
+      "Chci široké všeobecné vzdělání (víceleté gymnázium / klasické gymnázium)": "volba_vseobecne",
+      "Chci praxi a řemeslo (učňák / učební obor)": "volba_prakticke",
+      "Zajímá mě odborná střední škola (SOŠ) — technika, ekonomie, zdravotnictví …": "volba_sos",
+      "Nevím / chci poradit podle zájmů a silných stránek": "dotaz_zajmy_sily",
+      "Zvážím gap year / brigádu / stáže před rozhodnutím": "volba_gapyear"
+    }
+  },
+  "volba_vseobecne": {
+    "title": "Dáváš přednost akademickému směru a maturitě?",
+    "description": "Gymnázium ti otevře široký přístup na vysoké školy, víceleté gymnázium může začít už po 5. nebo 6. třídě.",
+    "answers": {
+      "Ano, chci gymnázium (víceleté nebo čtyřleté) — zájem o humanitní/ přírodní vědy": "prep_gymnazium",
+      "Raději profilované všeobecné s důrazem na jazyky (lyceum / jazykové lyceum)": "prep_liceum",
+      "Maturita ano, ale chci i praktickou složku (OA/VOŠ ideálně později)": "prep_obchodni_akademie"
+    }
+  },
+  "prep_gymnazium": {
+    "title": "Zajímají tě spíš přírodní vědy nebo humanitní obory?",
+    "description": "",
+    "answers": {
+      "Přírodní / matematika / informatika": "zajem_stem",
+      "Humanitní / jazyky / společenské vědy": "zajem_humanitni",
+      "Nevím, rád/a bych rozhled v obou oblastech": "zajem_mixed"
+    }
+  },
+  "zajem_stem": {
+    "title": "Doporučení: studium na gymnáziu s rozšířenou matematikou/TV, nebo čtyřleté gymnázium se zaměřením na IT/Matematiku.",
+    "description": "Po gymnáziu vede cesta na technické nebo přírodovědecké fakulty (ČVUT, MFF, VŠE — dále dle zaměření).",
+    "answers": {
+      "Chci doporučení na konkrétní obor VŠ po maturitě": "fakulty_technicke_a_prirod",
+      "Přejdu na SOŠ s technickým zaměřením (pokud chci méně teorie, více praxe)": "sos_technicka"
+    }
+  },
+  "zajem_humanitni": {
+    "title": "Doporučení: gymnázium s důrazem na jazyky, společenské vědy nebo humanitní lyceum.",
+    "description": "Vhodné pro pozdější studium na FF, učitelství, právo, ekonomii či oblast médií.",
+    "answers": {
+      "Chci pokračovat na vysokou školu (humanitní obory)": "fakulty_humanitni",
+      "Preferuji praktičtější cestu (SOŠ / obory s praxí)": "sos_humanitni"
+    }
+  },
+  "zajem_mixed": {
+    "title": "Zkusit víceleté gymnázium nebo profilované lyceum — otevřené možnosti pro VŠ i praxi.",
+    "description": "",
+    "answers": {
+      "Upřednostním vysokou školu (po maturitě)": "fakulty_mix",
+      "Zvolením SOŠ získám více praxe hned": "sos_mix"
+    }
+  },
+  "prep_liceum": {
+    "title": "Lyceum / jazykové gymnázium = silné jazyky a širší humanitní základ",
+    "description": "Skvělé pokud chceš jazyky, překladatelství, mezinárodní vztahy, PR, marketing.",
+    "answers": {
+      "Ano, jazyky mě baví (volím lyceum)": "fakulty_jazyky",
+      "Chci praktické zaměření s maturitou (OA / SOŠ)": "sos_jazyky"
+    }
+  },
+  "prep_obchodni_akademie": {
+    "title": "Obchodní akademie (OA) — kombinace teorie a praxe, zaměření na ekonomii, účetnictví, informatiku v podnikání.",
+    "description": "",
+    "answers": {
+      "Cílem je VŠ ekonomie / management": "fakulty_ekonomie",
+      "Raději okamžitá praxe / kurz účetnictví": "kurzy_praxe_ekonom"
+    }
+  },
+  "volba_prakticke": {
+    "title": "Chceš učit se řemeslo, pracovat fyzicky, nebo získat praxi rychle?",
+    "description": "Učební obor (učňák) vede ke kvalifikaci a rychlému vstupu na trh práce; lze později doplnit maturitu.",
+    "answers": {
+      "Ano, učňák (chyba? — ne, dobrá volba) — řemeslo, stavebnictví, gastronomii": "vyber_ucnacka",
+      "Chci technické učiliště s praxí a možností maturity": "vyber_ucebninal_s_mat",
+      "Zajímá mě gastronomie / hotelnictví / cestovní ruch": "vyber_gastro"
+    }
+  },
+  "vyber_ucnacka": {
+    "title": "Vyber oblast řemesla:",
+    "description": "",
+    "answers": {
+      "Stavebnictví / elektrikář / instalatér": "ucni_stavebnictvi",
+      "Truhlářství / zámečník / automechanik": "ucni_remesla",
+      "Kadeřník / kosmetika / služby": "ucni_sluzby",
+      "Gastronomie (kuchař, cukrář)": "ucni_gastro"
+    }
+  },
+  "ucni_stavebnictvi": {
+    "title": "Stavební/elektrické obory — rychlé uplatnění, možnost pokračovat v učilišti až k maturitě speciální formou",
+    "description": "",
+    "answers": {
+      "Chci jít přímo do praxe a získat kvalifikaci": "vstup_do_prace",
+      "Later: doplnit maturitu a směřovat na VŠ technického směru": "smer_vyssi_vzdelani_tech"
+    }
+  },
+  "ucni_remesla": {
+    "title": "Řemeslné obory — dobré pro ty, kdo chtějí dělat manuální práci nebo podnikat.",
+    "description": "",
+    "answers": {
+      "Podnikání po získání výučního listu (autoservis, dílna)": "vstup_do_prace",
+      "Doplnit maturitu - technická SOŠ, poté VŠ": "smer_vyssi_vzdelani_tech"
+    }
+  },
+  "ucni_sluzby": {
+    "title": "Služby a péče — často kontaktní obory, vhodné pro lidi s empatií a manuální zručností.",
+    "description": "",
+    "answers": {
+      "Chci okamžitou praxi (salon, služby)": "vstup_do_prace",
+      "Chci se vzdělávat dál (např. obory péče, asistence, zdravotnické kurzy)": "sos_zdravotnictvi"
+    }
+  },
+  "ucni_gastro": {
+    "title": "Gastronomie — učňovské obory: kuchař, cukrář, číšník.",
+    "description": "",
+    "answers": {
+      "Rychlá praxe v oboru, stáže v provozech": "vstup_do_prace",
+      "Po praxi jít na SOŠ kuchařství nebo hotelnictví s maturitou": "sos_gastro_hotel"
+    }
+  },
+  "vyber_ucebninal_s_mat": {
+    "title": "Učební obor s možností maturitního doplnění — hledáš kombinaci praxe a diplomu?",
+    "description": "",
+    "answers": {
+      "Ano, chci později maturitu a širší spektrum (technika / automotive)": "smer_vyssi_vzdelani_tech",
+      "Ne, chci se věnovat řemeslu naplno": "vstup_do_prace"
+    }
+  },
+  "vyber_gastro": {
+    "title": "Gastronomie / hotelnictví — praxe ve firmách, školy i duelní programy.",
+    "description": "",
+    "answers": {
+      "Volím SOŠ hotelnictví / gastronomie (s maturitou)": "sos_gastro_hotel",
+      "Volím učňovský program pro rychlý start": "ucni_gastro"
+    }
+  },
+  "vstup_do_prace": {
+    "title": "Výsledek: ihned do praxe",
+    "description": "Získáš výuční list a začínáš pracovat. Později můžeš doplnit maturitu, nebo se specializovat kurzem.",
+    "answers": {}
+  },
+  "smer_vyssi_vzdelani_tech": {
+    "title": "Možná cesta: maturita → technická vysoká škola (strojírenství, elektrotechnika, informatika).",
+    "description": "Pokud budeš mít maturitu, můžeš jít na fakultu ČVUT, VUT, nebo podobnou technickou VŠ.",
+    "answers": {
+      "Chci IT / programování": "oblast_it",
+      "Chci strojírenství / elektrotechniku": "oblast_mechatronika"
+    }
+  },
+  "oblast_it": {
+    "title": "IT — doporučené směry: programování, sítě, kybernetika, datová analytika.",
+    "description": "",
+    "answers": {
+      "Studovat na VŠ (informatika / softwarové inženýrství)": "vysoka_it",
+      "Začít s odbornými kurzy a praxí (stáže, bootcampy)": "kurzy_it"
+    }
+  },
+  "vysoka_it": {
+    "title": "Výsledek: VŠ obor IT / informatika — standardní cesta po gymnáziu/SOŠ.",
+    "description": "Tato výsledná volba se může objevit z více větví (gymnázium, SOŠ, kurzy).",
+    "answers": {}
+  },
+  "kurzy_it": {
+    "title": "Bootcampy a kurzy — kratší cesta k praxi, dobré pro projekty a stáže.",
+    "description": "",
+    "answers": {
+      "Po kurzech jít do práce / stáže": "vstup_do_prace_it",
+      "Doplňující maturita a později VŠ": "vysoka_it"
+    }
+  },
+  "vstup_do_prace_it": {
+    "title": "Výsledek: praxe v IT (junior developer, helpdesk, síťový technik)",
+    "description": "Možnost kombinovat s dálkovým studiem nebo kurzy.",
+    "answers": {}
+  },
+  "oblast_mechatronika": {
+    "title": "Mechatronika / strojírenství — vhodné na SOŠ s praxí, poté VŠ technického směru.",
+    "description": "",
+    "answers": {
+      "Chci technické vysoké školy": "smer_vyssi_vzdelani_tech",
+      "Chci okamžitě praxi v průmyslu": "vstup_do_prace"
+    }
+  },
+  "volba_sos": {
+    "title": "Jaké pole tě zajímá? (technika, zdravotnictví, ekonomie, umění…)",
+    "description": "",
+    "answers": {
+      "Technika / informatika / elektro": "sos_technicka",
+      "Zdravotnictví / sociální péče": "sos_zdravotnictvi",
+      "Ekonomika / obchod / marketing": "sos_ekonomicka",
+      "Umělecké obory / design / média": "sos_umeni",
+      "Zemědělství / lesnictví / potravinářství": "sos_zemedel"
+    }
+  },
+  "sos_technicka": {
+    "title": "SOŠ technická — elektrotechnika, strojírenství, informatika, dopravní služby.",
+    "description": "Obvykle 4 roky, maturita, často odborné stáže.",
+    "answers": {
+      "Po maturitě chci VŠ technického směřování": "smer_vyssi_vzdelani_tech",
+      "Chci praxi v oboru a zaměstnání": "vstup_do_prace",
+      "Zajímá mě specializace na IT / automatizaci": "oblast_it"
+    }
+  },
+  "sos_zdravotnictvi": {
+    "title": "SOŠ zdravotnická / sociální — zdravotní sestra, sanitář, farmaceutický asistent, sociální pracovník.",
+    "description": "",
+    "answers": {
+      "Chci pokračovat ve studiu na VOŠ / VŠ (zdravotnická fakulta, ošetřovatelství)": "vysoka_zdrav",
+      "Chci jít do praxe po maturitě": "vstup_do_prace"
+    }
+  },
+  "vysoka_zdrav": {
+    "title": "VŠ v oborech zdravotnictví / ošetřovatelství / fyzioterapie / farmacie",
+    "description": "",
+    "answers": {}
+  },
+  "sos_ekonomicka": {
+    "title": "SOŠ ekonomická / obchodní akademie — účetnictví, marketing, logistika.",
+    "description": "",
+    "answers": {
+      "Cílem je VŠ ekonomie / management": "fakulty_ekonomie",
+      "Jít rovnou do praxe / stáží": "vstup_do_prace"
+    }
+  },
+  "sos_umeni": {
+    "title": "SOŠ umělecká / design — grafika, průmyslový design, herectví, fotografie.",
+    "description": "",
+    "answers": {
+      "Chci VŠ art/UMPRUM / filmovou školu": "fakulty_umeni",
+      "Chci praxi a portfólio pro přihlášku": "portfolio_prace"
+    }
+  },
+  "sos_gastro_hotel": {
+    "title": "SOŠ hotelnictví a gastronomie — maturita, praxe v provozech, mezinárodní stáže jsou běžné.",
+    "description": "",
+    "answers": {
+      "Práce v pohostinství / manažment": "vstup_do_prace",
+      "Studium hotelové VŠ nebo zahraničí": "fakulty_hospitality"
+    }
+  },
+  "portfolio_prace": {
+    "title": "Výsledek: vybudovat portfólio a praxi (stáž, kurzy), poté přihláška na uměleckou VŠ.",
+    "description": "",
+    "answers": {}
+  },
+  "fakulty_technicke_a_prirod": {
+    "title": "Technické a přírodovědecké fakulty — možnosti po maturitě z gymnázia nebo SOŠ s maturitou.",
+    "description": "",
+    "answers": {
+      "Chemie / biologie / farmacie": "fakulty_prirod",
+      "Informatika / AI / datová analytika": "vysoka_it",
+      "Strojírenství / elektrotechnika": "smer_vyssi_vzdelani_tech"
+    }
+  },
+  "fakulty_humanitni": {
+    "title": "Humanitní fakulty — filozofie, psychologie, historie, právo, mediální studia.",
+    "description": "",
+    "answers": {
+      "Práce v médiích / PR / komunikaci": "fakulty_media",
+      "Studium práva / společenských věd": "fakulty_pravo"
+    }
+  },
+  "fakulty_mix": {
+    "title": "Široké spektrum fakult — gymnázium ti ponechá více možností.",
+    "description": "",
+    "answers": {
+      "Budu dělat přijímačky na více fakult (multidisciplinární)": "prijimacky_priprava",
+      "Chci specializovat v průběhu gymnázia": "specializace_ve_skolce"
+    }
+  },
+  "fakulty_jazyky": {
+    "title": "Jazykové směry — překladatelství, angličtina, filologie, mezinárodní vztahy.",
+    "description": "",
+    "answers": {
+      "Studovat jazykově (FF, jazyková VŠ)": "fakulty_humanitni",
+      "Kombinovat jazyk s ekonomikou / managementem": "fakulty_ekonomie"
+    }
+  },
+  "fakulty_ekonomie": {
+    "title": "Ekonomické a obchodní fakulty — VŠE, fakulty ekonomie na univerzitách, management.",
+    "description": "",
+    "answers": {}
+  },
+  "kurzy_praxe_ekonom": {
+    "title": "Kurzy účetnictví, DA, stáže — zrychlená vstupenka na trh práce; později maturita či VŠ.",
+    "description": "",
+    "answers": {}
+  },
+  "sos_humanitni": {
+    "title": "SOŠ humanitní — pedagogika, sociální péče, pečovatelské obory.",
+    "description": "",
+    "answers": {
+      "Práce v sociálních službách": "vstup_do_prace",
+      "Pokračovat na VOŠ / VŠ pedagogické nebo sociální": "vysoka_zdrav"
+    }
+  },
+  "sos_jazyky": {
+    "title": "SOŠ s jazykovým zaměřením — užitečné, pokud preferuješ praktické uplatnění s dobrými jazyky.",
+    "description": "",
+    "answers": {
+      "Cílem mezinárodní práce / tlumočení": "fakulty_jazyky",
+      "Spíše praxe v podnikání s cizími jazyky": "vstup_do_prace"
+    }
+  },
+  "sos_zemedel": {
+    "title": "SOŠ zemědělská / lesnická / potravinářská — specializace pro přírodní zdroje a potraviny.",
+    "description": "",
+    "answers": {
+      "Práce v terénu / provozní role": "vstup_do_prace",
+      "Vědecké / technologické zaměření (potravinářství)": "fakulty_prirod"
+    }
+  },
+  "fakulty_prirod": {
+    "title": "Přírodovědecké fakulty — biologie, chemie, potravinářství, environmentální vědy.",
+    "description": "",
+    "answers": {}
+  },
+  "fakulty_media": {
+    "title": "Mediální obory — žurnalistika, PR, digitální média, filmové školy.",
+    "description": "",
+    "answers": {}
+  },
+  "fakulty_pravo": {
+    "title": "Právnické fakulty — náročné studium, často vyžadují maturitu a přijímací zkoušky.",
+    "description": "",
+    "answers": {}
+  },
+  "fakulty_umeni": {
+    "title": "Akademie výtvarných umění, filmové školy, konzervatoře — vyžadují portfólio a talentové zkoušky.",
+    "description": "",
+    "answers": {}
+  },
+  "fakulty_hospitality": {
+    "title": "Vysoké školy v oblasti hotelnictví a managementu — cestovní ruch, hotelový management.",
+    "description": "",
+    "answers": {}
+  },
+  "dotaz_zajmy_sily": {
+    "title": "Jaké máš zájmy a silné stránky?",
+    "description": "Vyber, co tě baví nejvíc — zájmy ovlivní volbu oboru.",
+    "answers": {
+      "Baví mě technika, počítače, matematika": "zajem_stem",
+      "Baví mě jazyky, literatura, komunikace": "zajem_humanitni",
+      "Baví mě ruční práce, stavby, mechanika": "vyber_ucnacka",
+      "Baví mě péče o lidi, medicína": "sos_zdravotnictvi",
+      "Baví mě umění, design, film": "sos_umeni"
+    }
+  },
+  "volba_gapyear": {
+    "title": "Gap year / brigáda / stáže: co očekáváš?",
+    "description": "Rok mimo školu může pomoci rozhodnout se — praxe, cestování, dobrovolnictví.",
+    "answers": {
+      "Chci kouzlit s praxí a stáží": "gap_praxe",
+      "Cestování a jazykové kurzy v zahraničí": "gap_jazyky",
+      "Dobrovolnické programy nebo stáže v oboru": "gap_dobrovol"
+    }
+  },
+  "gap_praxe": {
+    "title": "Gap praxe: krátkodobé brigády, stáže v lokálních firmách — pomůže ujasnit zájem.",
+    "description": "",
+    "answers": {
+      "Po praxi jít na učňák / SOŠ (pokud se potvrdí zájem o praxi)": "volba_prakticke",
+      "Nebo se připravit na přijímačky na VŠ / gymnázium": "prep_gymnazium"
+    }
+  },
+  "gap_jazyky": {
+    "title": "Jazykové kurzy v zahraničí — posílí dovednosti pro lycea a mezinárodní studia.",
+    "description": "",
+    "answers": {
+      "Po kurzech jít na lyceum / jazykové gymnázium": "prep_liceum",
+      "Combinuju s praxí a stáží": "gap_praxe"
+    }
+  },
+  "gap_dobrovol": {
+    "title": "Dobrovolnictví — praxe v sociálních službách, ochraně přírody, neziskovkách.",
+    "description": "",
+    "answers": {
+      "Pokračovat na SOŠ sociální / zdravotnickou": "sos_humanitni",
+      "Zkusit dál VŠ v příbuzném oboru": "fakulty_prirod"
+    }
+  },
+  "_template": {
+    "colors": {
+      "bg": "#f8fdf6",
+      "title": "#000000",
+      "text": "#241f31",
+      "btn": "#813d9c"
+    },
+    "_qTpl": "<h2>{title}</h2>\n<p class=\"sub\">{description}</p>\n<div class=\"ch\">{answers}</div>",
+    "_rTpl": "<div class=\"res\">{title}</div>\n<p class=\"rsub\">{description}</p>\n<button class=\"btn sec\" onclick=\"go('start')\">&#x21A9; Zpět na začátek</button>"
+  },
+  "_name": "Kam po ZŠ",
+  "_positions": {
+    "start": {
+      "x": -1212.6514894102681,
+      "y": 487.1205741641738
+    },
+    "volba_vseobecne": {
+      "x": -679.1481864345708,
+      "y": -300.6748726589067
+    },
+    "volba_prakticke": {
+      "x": -424.3644514972748,
+      "y": 457.0974608212339
+    },
+    "volba_sos": {
+      "x": -473.8489175423441,
+      "y": 1426.0099332138507
+    },
+    "dotaz_zajmy_sily": {
+      "x": -591.8503365728942,
+      "y": 2314.98596045674
+    },
+    "volba_gapyear": {
+      "x": -591.8503365728943,
+      "y": 3340.9958936705902
+    },
+    "prep_gymnazium": {
+      "x": 407.35168022232403,
+      "y": -1436.7161317195987
+    },
+    "prep_liceum": {
+      "x": 354.0607167891724,
+      "y": -787.549439925892
+    },
+    "prep_obchodni_akademie": {
+      "x": 3011.1793625604973,
+      "y": -500.9886980096796
+    },
+    "vyber_ucnacka": {
+      "x": 285.54376380369166,
+      "y": -124.901120148216
+    },
+    "vyber_ucebninal_s_mat": {
+      "x": 1816.6666666666667,
+      "y": 100
+    },
+    "vyber_gastro": {
+      "x": 1096.6666666666667,
+      "y": 566.6666666666667
+    },
+    "sos_technicka": {
+      "x": 890,
+      "y": 753.3333333333334
+    },
+    "sos_zdravotnictvi": {
+      "x": 1490,
+      "y": 1093.3333333333335
+    },
+    "sos_ekonomicka": {
+      "x": 956.6666666666667,
+      "y": 1320
+    },
+    "sos_umeni": {
+      "x": 2930,
+      "y": 1606.6666666666667
+    },
+    "sos_zemedel": {
+      "x": 1803.3333333333335,
+      "y": 3573.3333333333335
+    },
+    "zajem_stem": {
+      "x": 592.6439589883197,
+      "y": 2047.77506311291
+    },
+    "zajem_humanitni": {
+      "x": 547.5196017315061,
+      "y": 2576.538237412551
+    },
+    "gap_praxe": {
+      "x": -13.311695603176304,
+      "y": 2802.3235844164446
+    },
+    "gap_jazyky": {
+      "x": 154.29305992213108,
+      "y": 3569.601218502101
+    },
+    "gap_dobrovol": {
+      "x": 319.802240296432,
+      "y": 4402.930919789767
+    },
+    "zajem_mixed": {
+      "x": 1676.815011571383,
+      "y": -1425.6144138067145
+    },
+    "fakulty_jazyky": {
+      "x": 2398.538188189652,
+      "y": -1279.9364451497274
+    },
+    "sos_jazyky": {
+      "x": 1736.1017179128842,
+      "y": -792.4293751240172
+    },
+    "fakulty_ekonomie": {
+      "x": 5279.811348049044,
+      "y": -902.5244942413269
+    },
+    "kurzy_praxe_ekonom": {
+      "x": 5158.333333333334,
+      "y": -166.66666666666663
+    },
+    "ucni_stavebnictvi": {
+      "x": 3545,
+      "y": 80
+    },
+    "ucni_remesla": {
+      "x": 1671.6666666666667,
+      "y": -286.6666666666667
+    },
+    "ucni_sluzby": {
+      "x": 1238.3333333333335,
+      "y": -540
+    },
+    "ucni_gastro": {
+      "x": 1698.3333333333335,
+      "y": 526.6666666666667
+    },
+    "smer_vyssi_vzdelani_tech": {
+      "x": 3458.3333333333335,
+      "y": 533.3333333333334
+    },
+    "vstup_do_prace": {
+      "x": 11893.765494096499,
+      "y": -6869.358238473568
+    },
+    "sos_gastro_hotel": {
+      "x": 4551.666666666667,
+      "y": 1193.3333333333335
+    },
+    "oblast_it": {
+      "x": 1698.3333333333335,
+      "y": 2100
+    },
+    "vysoka_zdrav": {
+      "x": 5311.666666666667,
+      "y": 4193.333333333334
+    },
+    "fakulty_umeni": {
+      "x": 5911.666666666667,
+      "y": 726.6666666666666
+    },
+    "portfolio_prace": {
+      "x": 5251.813939397285,
+      "y": 2686.2895228989246
+    },
+    "fakulty_prirod": {
+      "x": 5232.474929144366,
+      "y": 3421.3354732297134
+    },
+    "fakulty_technicke_a_prirod": {
+      "x": 1699.8823896109634,
+      "y": 2989.594471634324
+    },
+    "fakulty_humanitni": {
+      "x": 2267.1600236966187,
+      "y": 2583.638817042828
+    },
+    "sos_humanitni": {
+      "x": 1558.0629810895493,
+      "y": 4859.359250856251
+    },
+    "fakulty_mix": {
+      "x": 4120,
+      "y": -2093.3333333333335
+    },
+    "oblast_mechatronika": {
+      "x": 3646.666666666667,
+      "y": 993.3333333333334
+    },
+    "fakulty_hospitality": {
+      "x": 5308.872988465469,
+      "y": 1381.5449669007196
+    },
+    "vysoka_it": {
+      "x": 5151.2439700671575,
+      "y": 2304.4909344658936
+    },
+    "kurzy_it": {
+      "x": 3774.071332879611,
+      "y": 1657.362787879457
+    },
+    "fakulty_media": {
+      "x": 5230.943438599591,
+      "y": 3017.703403054662
+    },
+    "fakulty_pravo": {
+      "x": 5220,
+      "y": 3206.666666666667
+    },
+    "vstup_do_prace_it": {
+      "x": 5274.53630531163,
+      "y": 1908.6063604475924
+    }
+  }
+}

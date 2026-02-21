@@ -1,0 +1,400 @@
+{
+  "start": {
+    "title": "Jaký je tvůj hlavní cíl a plán po střední škole?",
+    "description": "Vyber možnost, která nejlépe vystihuje, co chceš v životě dělat a jaký typ studia preferuješ.",
+    "answers": {
+      "Chci určitě na VŠ a nevadí mi hodně teorie": "vysoka-jista",
+      "Chci maturitu a hned potom mít konkrétní profesi v ruce": "maturita-praxe",
+      "Chci výuční list, žádné zdlouhavé učení z knih": "chci-vyucnak",
+      "Chci se naplno věnovat umění nebo vrcholovému sportu": "umeni-sport",
+      "Zatím vůbec nevím, tápu": "pracovni-prostredi"
+    }
+  },
+  "vysoka-jista": {
+    "title": "Už víš zhruba, jaký obor bys chtěl na VŠ studovat?",
+    "description": "Zvol, nakolik máš ujasněnou svou profesní budoucnost.",
+    "answers": {
+      "Vůbec nevím, chci mít otevřené úplně všechny dveře": "vztah-k-uceni",
+      "Mám jen rámcovou představu, ale chci širší rozhled": "obor-smer",
+      "Vím to přesně, chci už na střední mít odborné předměty": "maturita-praxe"
+    }
+  },
+  "vztah-k-uceni": {
+    "title": "Jak moc tě baví se učit teoretické věci a biflovat se?",
+    "description": "",
+    "answers": {
+      "Baví mě to, mám rád/a výzvy a hodně teoretických předmětů": "gymnazium-vseobecne",
+      "Teorie mi nevadí, ale raději bych k tomu i nějakou praxi": "obor-smer",
+      "Učení z knížek mě moc nebaví, raději tvořím nebo zkoumám": "maturita-praxe"
+    }
+  },
+  "obor-smer": {
+    "title": "K jaké oblasti lidského vědění tě to nejvíce táhne?",
+    "description": "Vyber obor, ve kterém bys chtěl jednou působit na úrovni vysokoškoláka (management, výzkum, projektování...).",
+    "answers": {
+      "Technika, stroje a IT": "lyceum-technicke",
+      "Příroda, chemie, biologie, medicína": "lyceum-prirodovedne",
+      "Jazyky, historie, právo, společnost": "smer-humanitni",
+      "Ekonomika, peníze, management": "lyceum-ekonomicke",
+      "Učitelství, psychologie a práce s lidmi": "lyceum-pedagogicke"
+    }
+  },
+  "smer-humanitni": {
+    "title": "Co tě z humanitních oborů láká nejvíce?",
+    "description": "",
+    "answers": {
+      "Cizí jazyky, literatura a překladatelství": "gymnazium-jazykove",
+      "Právo, administrativa a veřejná správa": "sos-verejnasprava",
+      "Všeobecný přehled, dějepis, základy pro práva na VŠ": "gymnazium-vseobecne"
+    }
+  },
+  "maturita-praxe": {
+    "title": "Jaký obor nebo činnost tě nejvíce zajímá?",
+    "description": "Chceš odbornou školu (SOŠ) zakončenou maturitou. Jaké zaměření tě láká?",
+    "answers": {
+      "Počítače, technika, stroje, stavby": "smer-technika",
+      "Peníze, obchod, byznys": "smer-ekonomika",
+      "Příroda, biologie, zemědělství, zdraví": "smer-priroda",
+      "Práce s lidmi (školství, sociální sféra, služby)": "smer-pedagogika-sluzby",
+      "Pořád si nejsem jistý/á, nevyhranil/a jsem se": "pracovni-prostredi"
+    }
+  },
+  "smer-technika": {
+    "title": "Jsi spíše přes počítače nebo přes fyzické stroje a stavby?",
+    "description": "",
+    "answers": {
+      "Rozhodně počítače a software": "math-relation",
+      "Stroje, elektrotechnika, motory": "tech-fyzicka",
+      "Domy, mosty, architektura, mapy": "tech-stavba",
+      "Zajímá mě vše, ale spíše teoreticky (chci pak na VŠ)": "lyceum-technicke"
+    }
+  },
+  "math-relation": {
+    "title": "Jak jsi na tom s matematikou a logickým myšlením?",
+    "description": "Pro IT obory je to celkem zásadní otázka.",
+    "answers": {
+      "Matika mi jde skvěle, baví mě složité algoritmy": "gymnazium-prirodovedne",
+      "Je to v pohodě, chci programovat a spravovat sítě": "sos-it",
+      "Nesnáším matiku, ale miluju počítačovou grafiku a design": "sos-it-grafika"
+    }
+  },
+  "tech-fyzicka": {
+    "title": "Co tě fascinuje víc?",
+    "description": "",
+    "answers": {
+      "Elektrotechnika, tištěné spoje, inteligentní domácnosti": "sos-elektro",
+      "Strojírenství, CNC frézy, 3D tisk, konstrukce": "sos-strojirenska"
+    }
+  },
+  "tech-stavba": {
+    "title": "Chceš domy navrhovat, nebo raději pracovat v terénu a zaměřovat?",
+    "description": "",
+    "answers": {
+      "Navrhovat budovy a počítat materiály": "sos-stavebni",
+      "Geodézie, práce s mapami a katastrem": "sos-geodezie"
+    }
+  },
+  "smer-priroda": {
+    "title": "Zajímá tě spíše práce v laboratoři/nemocnici nebo s rostlinami/zvířaty venku?",
+    "description": "",
+    "answers": {
+      "Lidé, zdraví, medicína, laboratoře": "zdravotnictvi-vyber",
+      "Zvířata, rostliny, farmy, příroda": "priroda-zemedelstvi",
+      "Spíše vědecká biologie a chemie (cíl: přírodověda na VŠ)": "lyceum-prirodovedne"
+    }
+  },
+  "zdravotnictvi-vyber": {
+    "title": "Jak moc chceš být v přímém kontaktu s pacienty?",
+    "description": "",
+    "answers": {
+      "Chci o pacienty přímo pečovat (sestra/bratr)": "sos-zdravotnicka",
+      "Raději zkumavky, vzorky nebo výroba zubních náhrad": "sos-zdravotnicka-lab",
+      "Mířím vysoko, chci být lékař/chirurg (nutná VŠ)": "gymnazium-vseobecne"
+    }
+  },
+  "priroda-zemedelstvi": {
+    "title": "Co z přírody je ti nejbližší?",
+    "description": "",
+    "answers": {
+      "Zemědělství, farmaření a pěstování": "sos-zemedelska",
+      "Léčení a péče o zvířata": "sos-veterinarni",
+      "Ekologie, lesnictví a ochrana životního prostředí": "sos-ekologicka"
+    }
+  },
+  "smer-ekonomika": {
+    "title": "Jsi spíše na čísla a tabulky, nebo na komunikaci a prodej?",
+    "description": "",
+    "answers": {
+      "Čísla, účetnictví, finance, daně": "sos-ekonomika",
+      "Lidé, marketing, přesvědčování, vedení obchodu": "sos-obchod",
+      "Obojí, ale spíše na teoretické úrovni (příprava na eko VŠ)": "lyceum-ekonomicke"
+    }
+  },
+  "smer-pedagogika-sluzby": {
+    "title": "S kým bys chtěl nejčastěji pracovat?",
+    "description": "",
+    "answers": {
+      "S malými dětmi (učitel/ka v MŠ)": "sos-pedagogicka",
+      "S lidmi, kteří potřebují sociální pomoc a péči": "sos-socialni",
+      "S hosty, turisty, v restauraci nebo hotelu": "sos-hotelnictvi",
+      "Raději půjdu do zdravotnictví pomáhat nemocným": "zdravotnictvi-vyber"
+    }
+  },
+  "chci-vyucnak": {
+    "title": "Získání výučního listu trvá zpravidla 3 roky. Které řemeslo ti voní nejvíc?",
+    "description": "Vyber si hrubý směr, kde chceš dělat rukama.",
+    "answers": {
+      "Auta, stroje, elektřina, kovovýroba": "sou-kovo-elektro",
+      "Dřevo, cihly, malta, instalatérství": "sou-stavba-drevo",
+      "Péče o lidi a jejich vzhled (kadeřník, kosmetika)": "sou-sluzby",
+      "Příprava jídla a pečení": "sou-gastro-vyucnak",
+      "Zemědělství, rostliny, venkovní práce": "sou-zemedelstvi",
+      "Chci dělat umělecké předměty rukama": "sou-umelecke"
+    }
+  },
+  "umeni-sport": {
+    "title": "Jdeš cestou fyzického výkonu, nebo umělecké duše?",
+    "description": "",
+    "answers": {
+      "Sport je můj život, chci i trénovat": "gymnazium-sportovni",
+      "Hudba, zpěv, tanec, herectví": "konzervator",
+      "Kreslení, malba, užitý design, fotografie": "sos-umelecka",
+      "Rukodělné umění (keramika, umělecké kovářství)": "sou-umelecke"
+    }
+  },
+  "pracovni-prostredi": {
+    "title": "Pojďme na to od lesa. Kde bys chtěl/a nejraději trávit svůj běžný pracovní den?",
+    "description": "Zkus si představit svou ideální práci za 10 let.",
+    "answers": {
+      "V kanceláři, u stolu, s počítačem": "kancelar-pc",
+      "Venku v přírodě nebo v terénu na stavbách": "venku-prace",
+      "V dílně, laboratoři, nemocnici nebo kuchyni": "dilna-lab-nem",
+      "Neustále mezi spoustou lidí, komunikovat, obsluhovat": "mezi-lidmi"
+    }
+  },
+  "kancelar-pc": {
+    "title": "A co přesně bys v té kanceláři u PC chtěl/a dělat?",
+    "description": "",
+    "answers": {
+      "Programovat, psát kód, tvořit weby": "math-relation",
+      "Kreslit grafiku, tvořit videa a design": "sos-it-grafika",
+      "Počítat peníze, řešit účetnictví a byznys": "sos-ekonomika",
+      "Řešit zákony, smlouvy a papírování pro státní správu": "sos-verejnasprava",
+      "Tvořit marketing a obchodovat": "sos-obchod"
+    }
+  },
+  "venku-prace": {
+    "title": "Láká tě venku spíše příroda, nebo budování něčeho nového?",
+    "description": "",
+    "answers": {
+      "Rostliny, ekologie a zvířata s maturitou": "priroda-zemedelstvi",
+      "Chci farmařit a pracovat venku manuálně (výuční list)": "sou-zemedelstvi",
+      "Stavět, navrhovat a zaměřovat budovy s maturitou": "tech-stavba",
+      "Manuální stavba rukama (zedník, tesař, pokrývač)": "sou-stavba-drevo"
+    }
+  },
+  "dilna-lab-nem": {
+    "title": "Co bys v této laboratoři/dílně držel v ruce jako svůj nástroj?",
+    "description": "",
+    "answers": {
+      "Zkumavky, pipety nebo zubařské nástroje": "zdravotnictvi-vyber",
+      "Páječku, měřicí přístroje a plošné spoje": "sos-elektro",
+      "Kladivo, klíče, popřípadě programování pro CNC stroj": "sos-strojirenska",
+      "Vařečku, nože a potraviny": "smer-gastro"
+    }
+  },
+  "mezi-lidmi": {
+    "title": "Jaká by byla tvoje hlavní role vůči těmto lidem?",
+    "description": "",
+    "answers": {
+      "Vychovávat je, starat se o děti nebo o seniory": "smer-pedagogika-sluzby",
+      "Kecat s nimi, prodávat jim věci, přesvědčovat je": "sos-obchod",
+      "Pečovat o jejich účes, pleť a vzhled (výuční list)": "sou-sluzby",
+      "Obsluhovat je, vařit jim, pracovat v hotelu": "smer-gastro"
+    }
+  },
+  "smer-gastro": {
+    "title": "Chceš se učit jazyky, management hotelu a mít maturitu, nebo hned vařit a péct s výučním listem?",
+    "description": "",
+    "answers": {
+      "Management, hotelnictví a turismus (Maturita)": "sos-hotelnictvi",
+      "Kuchař, číšník, cukrář (Výuční list)": "sou-gastro-vyucnak"
+    }
+  },
+
+  "gymnazium-vseobecne": {
+    "title": "Gymnázium (Všeobecné)",
+    "description": "Získáš obrovský všeobecný přehled, naučíš se cizí jazyky a perfektně se připravíš na vysokou školu. Je to ideální volba, pokud chceš jít na práva, medicínu, psychologii či jiné humanitní obory. Nezískáš ale žádnou konkrétní profesi ihned po maturitě, s VŠ se v podstatě počítá.",
+    "answers": {}
+  },
+  "gymnazium-prirodovedne": {
+    "title": "Gymnázium (Přírodovědné / Matematické)",
+    "description": "Kromě všeobecného přehledu získáš brutální průpravu v matematice, fyzice, chemii a biologii. Špičkový odrazový můstek pro ČVUT, MFF UK, medicínu nebo vědecký výzkum.",
+    "answers": {}
+  },
+  "gymnazium-jazykove": {
+    "title": "Gymnázium (Jazykové)",
+    "description": "Tvé zaměření bude silně humanitní. Naučíš se plynule 2 až 3 cizí jazyky. Ideální jako příprava na studium filologie, překladatelství nebo mezinárodních vztahů na VŠ.",
+    "answers": {}
+  },
+  "gymnazium-sportovni": {
+    "title": "Sportovní gymnázium",
+    "description": "Studium pro vrcholové a poloprofesionální sportovce. Škola má přizpůsobený rozvrh, aby žáci stíhali tréninky a soustředění. Často vede na Fakultu tělesné výchovy a sportu (FTVS).",
+    "answers": {}
+  },
+  "lyceum-technicke": {
+    "title": "Technické lyceum",
+    "description": "Něco mezi gymnáziem a průmyslovkou. Získáš skvělé znalosti matematiky a přírodních věd, ale okusíš i základy IT a strojírenství. Perfektní jako příprava na technické VŠ, pokud se ještě nechceš profilovat jen do jednoho inženýrského oboru.",
+    "answers": {}
+  },
+  "lyceum-prirodovedne": {
+    "title": "Přírodovědné lyceum",
+    "description": "Kompromis pro ty, kteří milují chemii, biologii a ekologii a chtějí na VŠ, ale chtějí si sáhnout i na odborné předměty a do laboratoře dřív než až na vysoké.",
+    "answers": {}
+  },
+  "lyceum-ekonomicke": {
+    "title": "Ekonomické lyceum",
+    "description": "Obsahuje hodně ekonomiky, účetnictví a jazyků, ale zároveň velkou porci všeobecně vzdělávacích předmětů. Vytvořeno primárně pro studenty mířící na VŠE a ekonomické fakulty.",
+    "answers": {}
+  },
+  "lyceum-pedagogicke": {
+    "title": "Pedagogické lyceum",
+    "description": "Oproti odborné pedagogické škole (pro učitelky v MŠ) tě toto lyceum připraví spíše na studium učitelství pro 1. a 2. stupeň ZŠ, střední školy nebo psychologii a speciální pedagogiku na VŠ.",
+    "answers": {}
+  },
+  "sos-it": {
+    "title": "SOŠ - Informační technologie",
+    "description": "Kódování, databáze, počítačové sítě a hardware. Po maturitě můžeš jít s klidem rovnou pracovat jako junior programátor či ajťák, ale drtivá většina absolventů pokračuje na technické VŠ.",
+    "answers": {}
+  },
+  "sos-it-grafika": {
+    "title": "SOŠ - IT a Počítačová grafika",
+    "description": "Mix technologií a kreativity. Naučíš se pracovat v Adobe Creative Cloud, 3D modelování, tvorbu webů po vizuální stránce a animace. Ideální pro budoucí webaře, designéry a multimediální tvůrce.",
+    "answers": {}
+  },
+  "sos-elektro": {
+    "title": "SOŠ - Elektrotechnika",
+    "description": "Slaboproud, silnoproud, automatizace, robotika, internet věcí. Obor, u kterého je po maturitě prakticky 100% zaměstnanost a velké peníze. Nebo výborný odraz pro ČVUT FEL.",
+    "answers": {}
+  },
+  "sos-strojirenska": {
+    "title": "SOŠ - Strojírenství",
+    "description": "Konstruování v CAD softwarech, znalost materiálů, mechaniky a programování CNC obráběcích strojů. Páteř českého průmyslu s okamžitým uplatněním.",
+    "answers": {}
+  },
+  "sos-stavebni": {
+    "title": "SOŠ - Stavebnictví a Architektura",
+    "description": "Budeš rýsovat, kreslit v CADu, počítat statiku a navrhovat budovy od sklepa po střechu. Vede tě na profesi stavebního dozoru, projektanta nebo na VŠ Architektury / Stavební fakultu.",
+    "answers": {}
+  },
+  "sos-geodezie": {
+    "title": "SOŠ - Geodézie a Katastr nemovitostí",
+    "description": "Velmi specifický technický obor. Půl dne strávíš v terénu s měřickým přístrojem (teodolitem) a půl dne v kanceláři u zpracování dat do map a katastru.",
+    "answers": {}
+  },
+  "sos-zdravotnicka": {
+    "title": "SZŠ - Praktická sestra (Zdravotnický asistent)",
+    "description": "Odborná škola připravující personál do nemocnic a pečovatelských zařízení. Hned po maturitě máš cenné povolání v kapse. Nebo můžeš pokračovat na VŠ na obor Všeobecná sestra nebo záchranářství.",
+    "answers": {}
+  },
+  "sos-zdravotnicka-lab": {
+    "title": "SZŠ - Laboratorní asistent / Asistent zubního technika",
+    "description": "Zdravotnický obor bez přímého neustálého kontaktu s pacienty. Budeš vyšetřovat vzorky krve, tkání, mikrobiologii nebo modelovat zubní náhrady. Často spojeno s chemií.",
+    "answers": {}
+  },
+  "sos-zemedelska": {
+    "title": "SOŠ - Agropodnikání",
+    "description": "Rostlinná výroba, chov zvířat a řízení farmy s přesahem do ekonomiky. Naučíš se, jak funguje moderní zemědělství a jak ho dělat profitabilně a udržitelně.",
+    "answers": {}
+  },
+  "sos-veterinarni": {
+    "title": "SOŠ - Veterinární prevence",
+    "description": "Péče o malá i hospodářská zvířata. Budeš asistovat veterinárnímu lékaři nebo pracovat v zoo či záchranných stanicích. Velmi těžká biologie, připravuje na studium veteriny na VŠ.",
+    "answers": {}
+  },
+  "sos-ekologicka": {
+    "title": "SOŠ - Ochrana přírody a prostředí",
+    "description": "Skloubení chemie, biologie a práva. Jak správně zacházet s odpady, měřit znečištění ovzduší, chránit krajinu a prosazovat environmentální zákony.",
+    "answers": {}
+  },
+  "sos-verejnasprava": {
+    "title": "SOŠ - Veřejnosprávní činnost",
+    "description": "Příprava na práci úředníka na ministerstvech, obcích, úřadech práce či soudech. Hodně práva, administrativy a psaní všech možných úředních listin.",
+    "answers": {}
+  },
+  "sos-ekonomika": {
+    "title": "SOŠ - Obchodní akademie (Finance, Účetnictví)",
+    "description": "Těžká ekonomika, účetnictví, daně, psaní všemi deseti, ekonomický software. Velmi žádáný profil pro korporace, banky a jakoukoliv velkou firmu ihned po maturitě.",
+    "answers": {}
+  },
+  "sos-obchod": {
+    "title": "SOŠ - Ekonomika a podnikání / Management obchodu",
+    "description": "Více zaměřeno na obchodování, marketing, komunikaci se zákazníkem a reálné zakládání firem. Často obnáší fiktivní firmy a měkčí dovednosti než suchá Obchodní akademie.",
+    "answers": {}
+  },
+  "sos-pedagogicka": {
+    "title": "SPgŠ - Předškolní a mimoškolní pedagogika",
+    "description": "Učíš se hrát na hudební nástroj, zpívat, tvořit, mluvit a psychologii malých dětí. S touto maturitou můžeš okamžitě pracovat jako učitel/ka v mateřské škole nebo vychovatel/ka v družině.",
+    "answers": {}
+  },
+  "sos-socialni": {
+    "title": "SOŠ - Sociální činnost",
+    "description": "Kombinace pedagogiky, psychologie a částečně zdravotnictví. Vede k povolání sociálního pracovníka v domovech důchodců, dětských domovech, ústavech či azylových centrech.",
+    "answers": {}
+  },
+  "sos-hotelnictvi": {
+    "title": "SOŠ - Hotelnictví a cestovní ruch",
+    "description": "Práce s lidmi, plynulé jazyky, znalost kultury stolování, organizování akcí a řízení chodu hotelu nebo cestovní kanceláře. Atraktivní obor s nutností slušného vystupování.",
+    "answers": {}
+  },
+  "sos-umelecka": {
+    "title": "SUŠ - Střední uměleckoprůmyslová škola",
+    "description": "Obory jako průmyslový design, grafický design, fotografie, oděvní tvorba, nebo bytová architektura. Často se dělají náročné talentové zkoušky už v lednu!",
+    "answers": {}
+  },
+  "konzervator": {
+    "title": "Konzervatoř",
+    "description": "Specifický typ 6leté školy zakončený titulem DiS. (Diplomovaný specialista). Maximální zaměření na hudební nástroj, klasický i moderní zpěv, tanec nebo herectví. Projde jen úzké procento s velkým talentem.",
+    "answers": {}
+  },
+  "sou-kovo-elektro": {
+    "title": "SOU (Výuční list) - Stroje, kovy, elektřina",
+    "description": "Obory jako Automechanik, Elektrikář-silnoproud, Obráběč kovů (CNC), Zámečník. Zlaté české ručičky, na které se čekají dlouhé měsíce a trh je dokáže královsky zaplatit.",
+    "answers": {}
+  },
+  "sou-stavba-drevo": {
+    "title": "SOU (Výuční list) - Stavby a dřevo",
+    "description": "Obory jako Truhlář, Tesař, Zedník, Instalatér, Malíř. Pokud máš sílu a šikovnost, po vyučení se můžeš okamžitě vrhnout do podnikání a nabízet řemeslo, po kterém je obrovský hlad.",
+    "answers": {}
+  },
+  "sou-sluzby": {
+    "title": "SOU (Výuční list) - Osobní služby",
+    "description": "Obory jako Kadeřník, Kosmetické služby, Prodavač, Masér. Přímý kontakt se zákazníky, práce vyžadující pečlivost, zručnost a příjemné vystupování.",
+    "answers": {}
+  },
+  "sou-gastro-vyucnak": {
+    "title": "SOU (Výuční list) - Gastronomie",
+    "description": "Obory jako Kuchař, Číšník, Cukrář, Pekař. Tříletý praktický výcvik, kde strávíš půlku studia v reálných provozech restaurací a hotelů.",
+    "answers": {}
+  },
+  "sou-zemedelstvi": {
+    "title": "SOU (Výuční list) - Zemědělství a příroda",
+    "description": "Obory jako Zahradník, Farmář, Opravář zemědělských strojů, Lesní mechanizátor. Jsi denně v kontaktu s přírodou, učíš se obsluhovat traktory a starat se o plodiny/zvířata.",
+    "answers": {}
+  },
+  "sou-umelecke": {
+    "title": "SOU (Výuční list) - Umělecká řemesla",
+    "description": "Obory jako Umělecký kovář, Keramik, Sklenář, Truhlář-restaurátor. Úžasná práce, kde spojuješ manuální řemeslnou tvrdost a umělecké cítění pro detail a krásu.",
+    "answers": {}
+  },
+  "_template": {
+    "colors": {
+      "bg": "#f9fcfb",
+      "title": "#1a365d",
+      "text": "#2d3748",
+      "btn": "#3182ce"
+    },
+    "_qTpl": "<h2>{title}</h2>\n<p class=\"sub\">{description}</p>\n<div class=\"ch\">{answers}</div>",
+    "_rTpl": "<div class=\"res\">{title}</div>\n<p class=\"rsub\">{description}</p>\n<button class=\"btn sec\" onclick=\"go('start')\">&#x21A9; Zkusit jinou cestu</button>"
+  }
+}

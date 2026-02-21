@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kam po ZŠ — EUDR</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg: #f8fdf6;
+  --h2: #000000;
+  --text: #241f31;
+  --sub: #241f31;
+  --res: #000000;
+  --rsub: #241f31;
+  --btn-fg: #813d9c;
+  --btn-bg: rgba(129,61,156,0.1);
+  --btn-bdr: rgba(129,61,156,0.3);
+  --btn-hov: rgba(129,61,156,0.22);
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;padding:40px;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(10px)}
+.slide.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+h2{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:700;max-width:580px;line-height:1.35;color:var(--h2)}
+.sub{color:var(--sub);max-width:480px;line-height:1.8;font-size:1rem;margin:0}
+.ch{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:640px;margin-top:4px}
+.btn{padding:13px 28px;background:var(--btn-bg);color:var(--btn-fg);border:1.5px solid var(--btn-bdr);border-radius:10px;font-size:1rem;cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600}
+.btn:hover{background:var(--btn-hov);border-color:var(--btn-fg);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.btn.sec{background:transparent;color:var(--sub);border-color:rgba(0,0,0,0.12);font-size:.88rem;font-weight:400}
+.btn.sec:hover{background:rgba(0,0,0,.05);transform:none;box-shadow:none}
+.res{font-size:clamp(1.5rem,4.5vw,2.5rem);font-weight:700;color:var(--res);max-width:560px;line-height:1.25}
+.rsub{color:var(--rsub);font-size:1rem;max-width:460px;line-height:1.8;margin:0}
+</style>
+</head>
+<body>
+<div class="slide" id="slide-start">
+<h2>Co plánuješ dělat po ukončení základní školy?</h2>
+<p class="sub">Tento strom ti pomůže zúžit možnosti — gymnázium, učňák, SOŠ, odborné kurzy, nebo 'gap year'.</p>
+<div class="ch"><button class="btn" onclick="go('volba_vseobecne')">Chci široké všeobecné vzdělání (víceleté gymnázium / klasické gymnázium)</button><button class="btn" onclick="go('volba_prakticke')">Chci praxi a řemeslo (učňák / učební obor)</button><button class="btn" onclick="go('volba_sos')">Zajímá mě odborná střední škola (SOŠ) — technika, ekonomie, zdravotnictví …</button><button class="btn" onclick="go('dotaz_zajmy_sily')">Nevím / chci poradit podle zájmů a silných stránek</button><button class="btn" onclick="go('volba_gapyear')">Zvážím gap year / brigádu / stáže před rozhodnutím</button></div>
+</div>
+<div class="slide" id="slide-volba_vseobecne">
+<h2>Dáváš přednost akademickému směru a maturitě?</h2>
+<p class="sub">Gymnázium ti otevře široký přístup na vysoké školy, víceleté gymnázium může začít už po 5. nebo 6. třídě.</p>
+<div class="ch"><button class="btn" onclick="go('prep_gymnazium')">Ano, chci gymnázium (víceleté nebo čtyřleté) — zájem o humanitní/ přírodní vědy</button><button class="btn" onclick="go('prep_liceum')">Raději profilované všeobecné s důrazem na jazyky (lyceum / jazykové lyceum)</button><button class="btn" onclick="go('prep_obchodni_akademie')">Maturita ano, ale chci i praktickou složku (OA/VOŠ ideálně později)</button></div>
+</div>
+<div class="slide" id="slide-prep_gymnazium">
+<h2>Zajímají tě spíš přírodní vědy nebo humanitní obory?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('zajem_stem')">Přírodní / matematika / informatika</button><button class="btn" onclick="go('zajem_humanitni')">Humanitní / jazyky / společenské vědy</button><button class="btn" onclick="go('zajem_mixed')">Nevím, rád/a bych rozhled v obou oblastech</button></div>
+</div>
+<div class="slide" id="slide-zajem_stem">
+<h2>Doporučení: studium na gymnáziu s rozšířenou matematikou/TV, nebo čtyřleté gymnázium se zaměřením na IT/Matematiku.</h2>
+<p class="sub">Po gymnáziu vede cesta na technické nebo přírodovědecké fakulty (ČVUT, MFF, VŠE — dále dle zaměření).</p>
+<div class="ch"><button class="btn" onclick="go('fakulty_technicke_a_prirod')">Chci doporučení na konkrétní obor VŠ po maturitě</button><button class="btn" onclick="go('sos_technicka')">Přejdu na SOŠ s technickým zaměřením (pokud chci méně teorie, více praxe)</button></div>
+</div>
+<div class="slide" id="slide-zajem_humanitni">
+<h2>Doporučení: gymnázium s důrazem na jazyky, společenské vědy nebo humanitní lyceum.</h2>
+<p class="sub">Vhodné pro pozdější studium na FF, učitelství, právo, ekonomii či oblast médií.</p>
+<div class="ch"><button class="btn" onclick="go('fakulty_humanitni')">Chci pokračovat na vysokou školu (humanitní obory)</button><button class="btn" onclick="go('sos_humanitni')">Preferuji praktičtější cestu (SOŠ / obory s praxí)</button></div>
+</div>
+<div class="slide" id="slide-zajem_mixed">
+<h2>Zkusit víceleté gymnázium nebo profilované lyceum — otevřené možnosti pro VŠ i praxi.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_mix')">Upřednostním vysokou školu (po maturitě)</button><button class="btn" onclick="go('sos_mix')">Zvolením SOŠ získám více praxe hned</button></div>
+</div>
+<div class="slide" id="slide-prep_liceum">
+<h2>Lyceum / jazykové gymnázium = silné jazyky a širší humanitní základ</h2>
+<p class="sub">Skvělé pokud chceš jazyky, překladatelství, mezinárodní vztahy, PR, marketing.</p>
+<div class="ch"><button class="btn" onclick="go('fakulty_jazyky')">Ano, jazyky mě baví (volím lyceum)</button><button class="btn" onclick="go('sos_jazyky')">Chci praktické zaměření s maturitou (OA / SOŠ)</button></div>
+</div>
+<div class="slide" id="slide-prep_obchodni_akademie">
+<h2>Obchodní akademie (OA) — kombinace teorie a praxe, zaměření na ekonomii, účetnictví, informatiku v podnikání.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_ekonomie')">Cílem je VŠ ekonomie / management</button><button class="btn" onclick="go('kurzy_praxe_ekonom')">Raději okamžitá praxe / kurz účetnictví</button></div>
+</div>
+<div class="slide" id="slide-volba_prakticke">
+<h2>Chceš učit se řemeslo, pracovat fyzicky, nebo získat praxi rychle?</h2>
+<p class="sub">Učební obor (učňák) vede ke kvalifikaci a rychlému vstupu na trh práce; lze později doplnit maturitu.</p>
+<div class="ch"><button class="btn" onclick="go('vyber_ucnacka')">Ano, učňák (chyba? — ne, dobrá volba) — řemeslo, stavebnictví, gastronomii</button><button class="btn" onclick="go('vyber_ucebninal_s_mat')">Chci technické učiliště s praxí a možností maturity</button><button class="btn" onclick="go('vyber_gastro')">Zajímá mě gastronomie / hotelnictví / cestovní ruch</button></div>
+</div>
+<div class="slide" id="slide-vyber_ucnacka">
+<h2>Vyber oblast řemesla:</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('ucni_stavebnictvi')">Stavebnictví / elektrikář / instalatér</button><button class="btn" onclick="go('ucni_remesla')">Truhlářství / zámečník / automechanik</button><button class="btn" onclick="go('ucni_sluzby')">Kadeřník / kosmetika / služby</button><button class="btn" onclick="go('ucni_gastro')">Gastronomie (kuchař, cukrář)</button></div>
+</div>
+<div class="slide" id="slide-ucni_stavebnictvi">
+<h2>Stavební/elektrické obory — rychlé uplatnění, možnost pokračovat v učilišti až k maturitě speciální formou</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Chci jít přímo do praxe a získat kvalifikaci</button><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Later: doplnit maturitu a směřovat na VŠ technického směru</button></div>
+</div>
+<div class="slide" id="slide-ucni_remesla">
+<h2>Řemeslné obory — dobré pro ty, kdo chtějí dělat manuální práci nebo podnikat.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Podnikání po získání výučního listu (autoservis, dílna)</button><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Doplnit maturitu - technická SOŠ, poté VŠ</button></div>
+</div>
+<div class="slide" id="slide-ucni_sluzby">
+<h2>Služby a péče — často kontaktní obory, vhodné pro lidi s empatií a manuální zručností.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Chci okamžitou praxi (salon, služby)</button><button class="btn" onclick="go('sos_zdravotnictvi')">Chci se vzdělávat dál (např. obory péče, asistence, zdravotnické kurzy)</button></div>
+</div>
+<div class="slide" id="slide-ucni_gastro">
+<h2>Gastronomie — učňovské obory: kuchař, cukrář, číšník.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Rychlá praxe v oboru, stáže v provozech</button><button class="btn" onclick="go('sos_gastro_hotel')">Po praxi jít na SOŠ kuchařství nebo hotelnictví s maturitou</button></div>
+</div>
+<div class="slide" id="slide-vyber_ucebninal_s_mat">
+<h2>Učební obor s možností maturitního doplnění — hledáš kombinaci praxe a diplomu?</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Ano, chci později maturitu a širší spektrum (technika / automotive)</button><button class="btn" onclick="go('vstup_do_prace')">Ne, chci se věnovat řemeslu naplno</button></div>
+</div>
+<div class="slide" id="slide-vyber_gastro">
+<h2>Gastronomie / hotelnictví — praxe ve firmách, školy i duelní programy.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos_gastro_hotel')">Volím SOŠ hotelnictví / gastronomie (s maturitou)</button><button class="btn" onclick="go('ucni_gastro')">Volím učňovský program pro rychlý start</button></div>
+</div>
+<div class="slide" id="slide-vstup_do_prace">
+<div class="res">Výsledek: ihned do praxe</div>
+<p class="rsub">Získáš výuční list a začínáš pracovat. Později můžeš doplnit maturitu, nebo se specializovat kurzem.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-smer_vyssi_vzdelani_tech">
+<h2>Možná cesta: maturita → technická vysoká škola (strojírenství, elektrotechnika, informatika).</h2>
+<p class="sub">Pokud budeš mít maturitu, můžeš jít na fakultu ČVUT, VUT, nebo podobnou technickou VŠ.</p>
+<div class="ch"><button class="btn" onclick="go('oblast_it')">Chci IT / programování</button><button class="btn" onclick="go('oblast_mechatronika')">Chci strojírenství / elektrotechniku</button></div>
+</div>
+<div class="slide" id="slide-oblast_it">
+<h2>IT — doporučené směry: programování, sítě, kybernetika, datová analytika.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vysoka_it')">Studovat na VŠ (informatika / softwarové inženýrství)</button><button class="btn" onclick="go('kurzy_it')">Začít s odbornými kurzy a praxí (stáže, bootcampy)</button></div>
+</div>
+<div class="slide" id="slide-vysoka_it">
+<div class="res">Výsledek: VŠ obor IT / informatika — standardní cesta po gymnáziu/SOŠ.</div>
+<p class="rsub">Tato výsledná volba se může objevit z více větví (gymnázium, SOŠ, kurzy).</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-kurzy_it">
+<h2>Bootcampy a kurzy — kratší cesta k praxi, dobré pro projekty a stáže.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace_it')">Po kurzech jít do práce / stáže</button><button class="btn" onclick="go('vysoka_it')">Doplňující maturita a později VŠ</button></div>
+</div>
+<div class="slide" id="slide-vstup_do_prace_it">
+<div class="res">Výsledek: praxe v IT (junior developer, helpdesk, síťový technik)</div>
+<p class="rsub">Možnost kombinovat s dálkovým studiem nebo kurzy.</p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-oblast_mechatronika">
+<h2>Mechatronika / strojírenství — vhodné na SOŠ s praxí, poté VŠ technického směru.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Chci technické vysoké školy</button><button class="btn" onclick="go('vstup_do_prace')">Chci okamžitě praxi v průmyslu</button></div>
+</div>
+<div class="slide" id="slide-volba_sos">
+<h2>Jaké pole tě zajímá? (technika, zdravotnictví, ekonomie, umění…)</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos_technicka')">Technika / informatika / elektro</button><button class="btn" onclick="go('sos_zdravotnictvi')">Zdravotnictví / sociální péče</button><button class="btn" onclick="go('sos_ekonomicka')">Ekonomika / obchod / marketing</button><button class="btn" onclick="go('sos_umeni')">Umělecké obory / design / média</button><button class="btn" onclick="go('sos_zemedel')">Zemědělství / lesnictví / potravinářství</button></div>
+</div>
+<div class="slide" id="slide-sos_technicka">
+<h2>SOŠ technická — elektrotechnika, strojírenství, informatika, dopravní služby.</h2>
+<p class="sub">Obvykle 4 roky, maturita, často odborné stáže.</p>
+<div class="ch"><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Po maturitě chci VŠ technického směřování</button><button class="btn" onclick="go('vstup_do_prace')">Chci praxi v oboru a zaměstnání</button><button class="btn" onclick="go('oblast_it')">Zajímá mě specializace na IT / automatizaci</button></div>
+</div>
+<div class="slide" id="slide-sos_zdravotnictvi">
+<h2>SOŠ zdravotnická / sociální — zdravotní sestra, sanitář, farmaceutický asistent, sociální pracovník.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vysoka_zdrav')">Chci pokračovat ve studiu na VOŠ / VŠ (zdravotnická fakulta, ošetřovatelství)</button><button class="btn" onclick="go('vstup_do_prace')">Chci jít do praxe po maturitě</button></div>
+</div>
+<div class="slide" id="slide-vysoka_zdrav">
+<div class="res">VŠ v oborech zdravotnictví / ošetřovatelství / fyzioterapie / farmacie</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-sos_ekonomicka">
+<h2>SOŠ ekonomická / obchodní akademie — účetnictví, marketing, logistika.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_ekonomie')">Cílem je VŠ ekonomie / management</button><button class="btn" onclick="go('vstup_do_prace')">Jít rovnou do praxe / stáží</button></div>
+</div>
+<div class="slide" id="slide-sos_umeni">
+<h2>SOŠ umělecká / design — grafika, průmyslový design, herectví, fotografie.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_umeni')">Chci VŠ art/UMPRUM / filmovou školu</button><button class="btn" onclick="go('portfolio_prace')">Chci praxi a portfólio pro přihlášku</button></div>
+</div>
+<div class="slide" id="slide-sos_gastro_hotel">
+<h2>SOŠ hotelnictví a gastronomie — maturita, praxe v provozech, mezinárodní stáže jsou běžné.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Práce v pohostinství / manažment</button><button class="btn" onclick="go('fakulty_hospitality')">Studium hotelové VŠ nebo zahraničí</button></div>
+</div>
+<div class="slide" id="slide-portfolio_prace">
+<div class="res">Výsledek: vybudovat portfólio a praxi (stáž, kurzy), poté přihláška na uměleckou VŠ.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-fakulty_technicke_a_prirod">
+<h2>Technické a přírodovědecké fakulty — možnosti po maturitě z gymnázia nebo SOŠ s maturitou.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_prirod')">Chemie / biologie / farmacie</button><button class="btn" onclick="go('vysoka_it')">Informatika / AI / datová analytika</button><button class="btn" onclick="go('smer_vyssi_vzdelani_tech')">Strojírenství / elektrotechnika</button></div>
+</div>
+<div class="slide" id="slide-fakulty_humanitni">
+<h2>Humanitní fakulty — filozofie, psychologie, historie, právo, mediální studia.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_media')">Práce v médiích / PR / komunikaci</button><button class="btn" onclick="go('fakulty_pravo')">Studium práva / společenských věd</button></div>
+</div>
+<div class="slide" id="slide-fakulty_mix">
+<h2>Široké spektrum fakult — gymnázium ti ponechá více možností.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('prijimacky_priprava')">Budu dělat přijímačky na více fakult (multidisciplinární)</button><button class="btn" onclick="go('specializace_ve_skolce')">Chci specializovat v průběhu gymnázia</button></div>
+</div>
+<div class="slide" id="slide-fakulty_jazyky">
+<h2>Jazykové směry — překladatelství, angličtina, filologie, mezinárodní vztahy.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_humanitni')">Studovat jazykově (FF, jazyková VŠ)</button><button class="btn" onclick="go('fakulty_ekonomie')">Kombinovat jazyk s ekonomikou / managementem</button></div>
+</div>
+<div class="slide" id="slide-fakulty_ekonomie">
+<div class="res">Ekonomické a obchodní fakulty — VŠE, fakulty ekonomie na univerzitách, management.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-kurzy_praxe_ekonom">
+<div class="res">Kurzy účetnictví, DA, stáže — zrychlená vstupenka na trh práce; později maturita či VŠ.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-sos_humanitni">
+<h2>SOŠ humanitní — pedagogika, sociální péče, pečovatelské obory.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Práce v sociálních službách</button><button class="btn" onclick="go('vysoka_zdrav')">Pokračovat na VOŠ / VŠ pedagogické nebo sociální</button></div>
+</div>
+<div class="slide" id="slide-sos_jazyky">
+<h2>SOŠ s jazykovým zaměřením — užitečné, pokud preferuješ praktické uplatnění s dobrými jazyky.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('fakulty_jazyky')">Cílem mezinárodní práce / tlumočení</button><button class="btn" onclick="go('vstup_do_prace')">Spíše praxe v podnikání s cizími jazyky</button></div>
+</div>
+<div class="slide" id="slide-sos_zemedel">
+<h2>SOŠ zemědělská / lesnická / potravinářská — specializace pro přírodní zdroje a potraviny.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('vstup_do_prace')">Práce v terénu / provozní role</button><button class="btn" onclick="go('fakulty_prirod')">Vědecké / technologické zaměření (potravinářství)</button></div>
+</div>
+<div class="slide" id="slide-fakulty_prirod">
+<div class="res">Přírodovědecké fakulty — biologie, chemie, potravinářství, environmentální vědy.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-fakulty_media">
+<div class="res">Mediální obory — žurnalistika, PR, digitální média, filmové školy.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-fakulty_pravo">
+<div class="res">Právnické fakulty — náročné studium, často vyžadují maturitu a přijímací zkoušky.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-fakulty_umeni">
+<div class="res">Akademie výtvarných umění, filmové školy, konzervatoře — vyžadují portfólio a talentové zkoušky.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-fakulty_hospitality">
+<div class="res">Vysoké školy v oblasti hotelnictví a managementu — cestovní ruch, hotelový management.</div>
+<p class="rsub"></p>
+<button class="btn sec" onclick="go('start')">&#x21A9; Zpět na začátek</button>
+</div>
+<div class="slide" id="slide-dotaz_zajmy_sily">
+<h2>Jaké máš zájmy a silné stránky?</h2>
+<p class="sub">Vyber, co tě baví nejvíc — zájmy ovlivní volbu oboru.</p>
+<div class="ch"><button class="btn" onclick="go('zajem_stem')">Baví mě technika, počítače, matematika</button><button class="btn" onclick="go('zajem_humanitni')">Baví mě jazyky, literatura, komunikace</button><button class="btn" onclick="go('vyber_ucnacka')">Baví mě ruční práce, stavby, mechanika</button><button class="btn" onclick="go('sos_zdravotnictvi')">Baví mě péče o lidi, medicína</button><button class="btn" onclick="go('sos_umeni')">Baví mě umění, design, film</button></div>
+</div>
+<div class="slide" id="slide-volba_gapyear">
+<h2>Gap year / brigáda / stáže: co očekáváš?</h2>
+<p class="sub">Rok mimo školu může pomoci rozhodnout se — praxe, cestování, dobrovolnictví.</p>
+<div class="ch"><button class="btn" onclick="go('gap_praxe')">Chci kouzlit s praxí a stáží</button><button class="btn" onclick="go('gap_jazyky')">Cestování a jazykové kurzy v zahraničí</button><button class="btn" onclick="go('gap_dobrovol')">Dobrovolnické programy nebo stáže v oboru</button></div>
+</div>
+<div class="slide" id="slide-gap_praxe">
+<h2>Gap praxe: krátkodobé brigády, stáže v lokálních firmách — pomůže ujasnit zájem.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('volba_prakticke')">Po praxi jít na učňák / SOŠ (pokud se potvrdí zájem o praxi)</button><button class="btn" onclick="go('prep_gymnazium')">Nebo se připravit na přijímačky na VŠ / gymnázium</button></div>
+</div>
+<div class="slide" id="slide-gap_jazyky">
+<h2>Jazykové kurzy v zahraničí — posílí dovednosti pro lycea a mezinárodní studia.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('prep_liceum')">Po kurzech jít na lyceum / jazykové gymnázium</button><button class="btn" onclick="go('gap_praxe')">Combinuju s praxí a stáží</button></div>
+</div>
+<div class="slide" id="slide-gap_dobrovol">
+<h2>Dobrovolnictví — praxe v sociálních službách, ochraně přírody, neziskovkách.</h2>
+<p class="sub"></p>
+<div class="ch"><button class="btn" onclick="go('sos_humanitni')">Pokračovat na SOŠ sociální / zdravotnickou</button><button class="btn" onclick="go('fakulty_prirod')">Zkusit dál VŠ v příbuzném oboru</button></div>
+</div>
+<script>
+function go(id){
+  document.querySelectorAll('.slide').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('slide-'+id);
+  if(el)el.classList.add('active');
+}
+go('start');
+</script>
+</body>
+</html>
