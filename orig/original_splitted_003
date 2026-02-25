@@ -1,0 +1,187 @@
+      <div class="tab"        data-tab="template" onclick="switchTab('template')" id="tab-template">Šablona</div>
+      <div class="tab"        data-tab="preview"  onclick="switchTab('preview')"  id="tab-preview">Náhled</div>
+    </div>
+
+    <div class="pane active" data-tab="editor"><div id="ned"></div></div>
+
+    <div class="pane" data-tab="json">
+      <textarea id="json-area" spellcheck="false"></textarea>
+      <div class="pfooter">
+        <button class="hbtn" id="btn-jcopy"  onclick="copyJSON()">Kopírovat</button>
+        <button class="hbtn" id="btn-japply" onclick="applyJSON()">Použít</button>
+        <button class="hbtn" id="btn-jfmt"   onclick="fmtJSON()">Formátovat</button>
+      </div>
+    </div>
+
+    <div class="pane" data-tab="template"><div id="tpl-ed"></div></div>
+
+    <div class="pane" data-tab="preview">
+      <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+      <div class="pfooter">
+        <span id="lbl-preview" style="flex:1;font-family:var(--mono);font-size:0.72rem;color:var(--text-dim)">Živý náhled</span>
+        <button class="hbtn amber" onclick="exportHTML()" id="btn-ehtml2">⬇ Export</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ONBOARDING -->
+<div class="modal-overlay" id="ob-modal">
+  <div class="modal">
+    <div class="ob-head">
+      <div class="ob-logo">
+        <svg class="ob-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#143a1a"/><polygon points="16,4 7,17 12,17 9,26 23,26 20,17 25,17" fill="#4dcc80"/></svg>
+        <div><div class="ob-title" id="ob-title">EUDR Tvůrce — NLI</div><div class="ob-subtitle" id="ob-sub">Nástroj pro tvorbu rozhodovacích stromů</div></div>
+      </div>
+    </div>
+    <div class="ob-body" id="ob-body"></div>
+    <div class="ob-foot"><button class="hbtn primary" id="ob-close" onclick="closeOB()">Rozumím, začít pracovat</button></div>
+  </div>
+</div>
+
+<!-- ADD NODE DIALOG -->
+<div class="modal-overlay" id="dlg">
+  <div class="modal">
+    <h3 id="dlg-h">Nový uzel</h3>
+    <div class="neg">
+      <div class="nelabel" id="dlg-idlbl">ID uzlu (slug)</div>
+      <input class="neinput" id="dlg-id" placeholder="napr. moje-otazka" oninput="slugify(this)">
+    </div>
+    <div class="neg">
+      <div class="nelabel" id="dlg-namelbl">Název</div>
+      <input class="neinput" id="dlg-name" placeholder="Text otázky…">
+    </div>
+    <div class="dlgbtns">
+      <button class="hbtn" id="dlg-cancel" onclick="closeDlg()">Zrušit</button>
+      <button class="hbtn primary" id="dlg-create" onclick="confirmAdd()">Vytvořit</button>
+    </div>
+  </div>
+</div>
+
+<div id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// I18N
+// ══════════════════════════════════════════════
+let lang = 'cs';
+
+const S = {
+  cs:{
+    appName:'EUDR Tvůrce', appSub:'NLI · ČR', langBtn:'EN',
+    import:'⬆ Import', ejson:'⬇ JSON', ejsonp:'⬇ JSON+P', ehtml:'⬇ HTML',
+    addnode:'Přidat uzel', nodeBtn:'Uzel',
+    autoLayout:'⟳ Auto-rozložení', fit:'⊡ Přizpůsobit',
+    diagPlaceholder:'Název diagramu…',
+    tEditor:'Editor uzlu', tJson:'JSON', tTemplate:'Šablona', tPreview:'Náhled',
+    livePreview:'Živý náhled',
+    copy:'Kopírovat', apply:'Použít', format:'Formátovat',
+    clickEdit:'Klikněte na uzel\npro úpravy',
+    nid:'ID uzlu', ntitle:'Název / Otázka', ndesc:'Popis',
+    customFields:'Vlastní pole', answers:'Odpovědi', answer:'Odpověď',
+    addAns:'＋ Přidat odpověď', delNode:'⚠ Smazat uzel',
+    leadsTo:'→ vede k',
+    // template
+    colorsBg:'Barva pozadí', colorsTitle:'Barva nadpisu', colorsText:'Barva textu', colorsBtn:'Barva tlačítka',
+    colorsDesc:'Barva tlačítka (text a ohraničení). Pozadí a hover efekt jsou vypočítány automaticky.',
+    customFieldsLbl:'Vlastní pole',
+    customFieldsDesc:'Přidejte libovolné datové pole ke každému uzlu. Uloženo v JSON, použitelné jako token v šablonách.',
+    noFields:'Zatím žádná vlastní pole.',
+    addField:'＋ Přidat pole',
+    qTplTitle:'Šablona — otázkový slide',
+    rTplTitle:'Šablona — výsledkový slide',
+    tokenHint:'Dostupné tokeny (kliknutím zkopírujete):',
+    newNode:'Nový uzel', nodeIdSlug:'ID uzlu (slug)', titleLbl:'Název',
+    cancel:'Zrušit', create:'Vytvořit',
+    obTitle:'EUDR Tvůrce — NLI', obSub:'Nástroj pro tvorbu rozhodovacích stromů',
+    obClose:'Rozumím, začít pracovat',
+    obCards:[
+      {icon:'🖱',t:'Plátno',d:'Přidávejte uzly tlačítkem ＋. Tahem přesouvejte, kolečkem přibližujte. Kliknutím vyberete uzel k úpravě.'},
+      {icon:'📋',t:'Editor uzlu',d:'Nastavte název (otázku), popis a odpovědi. Každá odpověď odkazuje na cílový uzel.'},
+      {icon:'💾',t:'JSON export',d:'Uloží celý strom. JSON+P navíc uloží pozice uzlů na plátně — ideální pro ruční rozložení. Průběžně zálohujte!'},
+      {icon:'🌐',t:'HTML export',d:'Vytvoří samostatnou interaktivní stránku — sdílejte nebo vložte do intranetu či webu.'},
+      {icon:'🎨',t:'Šablona',d:'Upravte barvy výsledné stránky a přidejte vlastní pole pro každý uzel.'},
+      {icon:'🌳',t:'EUDR/NLÚR',d:'Nástroj vytvořen pro podporu due diligence v rámci nařízení EU o odlesňování (EUDR / NLÚR).'},
+    ],
+    nJsonCopied:'JSON zkopírován ✓', nJsonApplied:'JSON použit ✓', nJsonBad:'Neplatný JSON',
+    nJsonFmt:'Nelze formátovat — neplatný JSON',
+    nJsonExp:'JSON exportován ✓', nJsonPExp:'JSON+Pozice exportován ✓',
+    nHtmlExp:'HTML exportováno ✓', nImported:'JSON importován ✓', nBadFile:'Neplatný soubor',
+    nLayoutReset:'Rozložení obnoveno ✓', nCannotDel:'⚠ Počáteční uzel nelze smazat',
+    nExists:'Uzel s tímto ID již existuje', nCreated:'Uzel vytvořen',
+    startTitle:'Úvodní otázka', startDesc:'', startAns:'Pokračovat →',
+    endTitle:'Výsledek', endDesc:'',
+  },
+  en:{
+    appName:'EUDR Maker', appSub:'NLI · CZ', langBtn:'CS',
+    import:'⬆ Import', ejson:'⬇ JSON', ejsonp:'⬇ JSON+P', ehtml:'⬇ HTML',
+    addnode:'Add Node', nodeBtn:'Node',
+    autoLayout:'⟳ Auto-layout', fit:'⊡ Fit',
+    diagPlaceholder:'Diagram name…',
+    tEditor:'Node Editor', tJson:'JSON', tTemplate:'Template', tPreview:'Preview',
+    livePreview:'Live preview',
+    copy:'Copy', apply:'Apply', format:'Format',
+    clickEdit:'Click a node\nto select and edit',
+    nid:'Node ID', ntitle:'Title / Question', ndesc:'Description',
+    customFields:'Custom Fields', answers:'Answers', answer:'Answer',
+    addAns:'＋ Add Answer', delNode:'⚠ Delete node',
+    leadsTo:'→ leads to',
+    colorsBg:'Background color', colorsTitle:'Heading color', colorsText:'Text color', colorsBtn:'Button color',
+    colorsDesc:'Button color (text and border). Background and hover are calculated automatically.',
+    customFieldsLbl:'Custom Fields',
+    customFieldsDesc:'Add extra data fields to every node. Stored in JSON, usable as tokens in templates.',
+    noFields:'No custom fields yet.',
+    addField:'＋ Add Field',
+    qTplTitle:'Template — question slide',
+    rTplTitle:'Template — result slide',
+    tokenHint:'Available tokens (click to copy):',
+    newNode:'New Node', nodeIdSlug:'Node ID (slug)', titleLbl:'Title',
+    cancel:'Cancel', create:'Create',
+    obTitle:'EUDR Maker — NLI', obSub:'Decision tree authoring tool',
+    obClose:'Get started',
+    obCards:[
+      {icon:'🖱',t:'Canvas',d:'Add nodes with ＋. Drag to move, scroll to zoom. Click a node to select and edit it.'},
+      {icon:'📋',t:'Node Editor',d:'Set title (question), description and answers. Each answer points to another node.'},
+      {icon:'💾',t:'JSON export',d:'Saves the full tree. JSON+P also includes canvas positions — great for preserving manual layout. Save often!'},
+      {icon:'🌐',t:'HTML export',d:'Generates a standalone interactive page — share or embed in intranet/web.'},
+      {icon:'🎨',t:'Template',d:'Customise output page colors and add custom fields to each node.'},
+      {icon:'🌳',t:'EUDR',d:'Built to support due diligence under the EU Deforestation Regulation (EUDR).'},
+    ],
+    nJsonCopied:'JSON copied ✓', nJsonApplied:'JSON applied ✓', nJsonBad:'Invalid JSON',
+    nJsonFmt:'Cannot format — invalid JSON',
+    nJsonExp:'JSON exported ✓', nJsonPExp:'JSON+Positions exported ✓',
+    nHtmlExp:'HTML exported ✓', nImported:'JSON imported ✓', nBadFile:'Invalid file',
+    nLayoutReset:'Layout reset ✓', nCannotDel:'⚠ Cannot delete the start node',
+    nExists:'Node ID already exists', nCreated:'Node created',
+    startTitle:'First question', startDesc:'', startAns:'Continue →',
+    endTitle:'Result', endDesc:'',
+  }
+};
+
+function t(k){ return S[lang][k] || k; }
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let tree = {};
+let pos  = {};
+let selId = null;
+let _drag = null;
+let tf = {x:80,y:80,s:1};
+let _jpause = false;
+let _resizing = false, _resX = 0, _resW = 0;
+
+// Simplified template: only 4 user-facing colors + two HTML templates
+const tmpl = {
+  colors: {
+    bg:    '#f8fdf6',
+    title: '#1a3020',
+    text:  '#2c4830',
+    btn:   '#2a7a38',
+  },
+  _qTpl: '<h2>{title}</h2>\n<p class="sub">{description}</p>\n<div class="ch">{answers}</div>',
+  _rTpl: '<div class="res">{title}</div>\n<p class="rsub">{description}</p>\n<button class="btn sec" onclick="go(\'start\')">&#x21A9; Zpět na začátek</button>',
+};
+
+const NW=224, NH=56, NBP=8, ANH=26, ADDH=26;
+const C=['#2e8a42','#c05830','#b09018','#2070b0','#8050b0',

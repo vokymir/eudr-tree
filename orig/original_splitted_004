@@ -1,0 +1,218 @@
+         '#b03060','#208878','#a06020','#405898','#608820',
+         '#a04870','#2868a8','#906018','#388858'];
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function makeDefault(){
+  return {
+    start:{title:t('startTitle'),description:t('startDesc'),answers:{[t('startAns')]:'end'}},
+    end:  {title:t('endTitle'),  description:t('endDesc'),  answers:{}}
+  };
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  genFavicon();
+  tree = makeDefault();
+  autoLayout();
+  renderAll();
+  fitView(false);
+  setupEvents();
+  applyLang();
+  renderNED();
+  showOB();
+});
+
+// ══════════════════════════════════════════════
+// FAVICON
+// ══════════════════════════════════════════════
+function genFavicon(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0e2e14"/><polygon points="16,4 7,17 12,17 9,26 23,26 20,17 25,17" fill="#4dcc80"/><rect x="14.5" y="24" width="3" height="3.5" rx="0.5" fill="#0e2e14"/></svg>`;
+  const lnk=document.createElement('link');
+  lnk.rel='icon';lnk.type='image/svg+xml';
+  lnk.href='data:image/svg+xml;base64,'+btoa(svg);
+  document.head.appendChild(lnk);
+}
+
+// ══════════════════════════════════════════════
+// THEME + LANG
+// ══════════════════════════════════════════════
+let _dark = false;
+function toggleTheme(){
+  _dark=!_dark;
+  document.body.className=_dark?'dark':'light';
+  document.getElementById('btn-theme').textContent=_dark?'☽':'☀';
+}
+
+function toggleLang(){
+  lang=lang==='cs'?'en':'cs';
+  applyLang();
+}
+
+function applyLang(){
+  const s=S[lang];
+  document.documentElement.lang=lang;
+  document.getElementById('logo-name').textContent=s.appName;
+  document.getElementById('logo-sub').textContent=s.appSub;
+  document.getElementById('btn-lang').textContent=s.langBtn;
+  document.getElementById('btn-import').textContent=s.import;
+  document.getElementById('btn-ejson').textContent=s.ejson;
+  document.getElementById('btn-ejsonp').textContent=s.ejsonp;
+  document.getElementById('btn-ehtml').textContent=s.ehtml;
+  document.getElementById('lbl-addnode').textContent=s.addnode;
+  document.getElementById('lbl-node').textContent=s.nodeBtn;
+  document.getElementById('lbl-autolayout').textContent=s.autoLayout;
+  document.getElementById('lbl-fit').textContent=s.fit;
+  document.getElementById('tab-editor').textContent=s.tEditor;
+  document.getElementById('tab-json').textContent=s.tJson;
+  document.getElementById('tab-template').textContent=s.tTemplate;
+  document.getElementById('tab-preview').textContent=s.tPreview;
+  document.getElementById('lbl-preview').textContent=s.livePreview;
+  document.getElementById('btn-jcopy').textContent=s.copy;
+  document.getElementById('btn-japply').textContent=s.apply;
+  document.getElementById('btn-jfmt').textContent=s.format;
+  document.getElementById('dlg-h').textContent=s.newNode;
+  document.getElementById('dlg-idlbl').textContent=s.nodeIdSlug;
+  document.getElementById('dlg-namelbl').textContent=s.titleLbl;
+  document.getElementById('dlg-cancel').textContent=s.cancel;
+  document.getElementById('dlg-create').textContent=s.create;
+  document.getElementById('ob-title').textContent=s.obTitle;
+  document.getElementById('ob-sub').textContent=s.obSub;
+  document.getElementById('ob-close').textContent=s.obClose;
+  document.getElementById('diag-name').placeholder=s.diagPlaceholder;
+  document.getElementById('btn-ehtml2').textContent=s.ehtml;
+  document.getElementById('ob-body').innerHTML=s.obCards.map(c=>`
+    <div class="ob-card">
+      <div class="ob-card-icon">${c.icon}</div>
+      <div class="ob-card-title">${c.t}</div>
+      <div class="ob-card-text">${c.d}</div>
+    </div>`).join('');
+  renderNED();
+  if(document.querySelector('.pane[data-tab="template"].active'))renderTplTab();
+}
+
+// ══════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════
+function showOB(){document.getElementById('ob-modal').classList.add('open');}
+function closeOB(){document.getElementById('ob-modal').classList.remove('open');}
+document.getElementById('ob-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOB();});
+
+// ══════════════════════════════════════════════
+// DIAGRAM NAME
+// ══════════════════════════════════════════════
+function onDiagName(v){
+  tree._name = v.trim() || undefined;
+  renderJSONArea();
+  renderPreview();
+}
+
+function diagName(){
+  return (typeof tree._name==='string'&&tree._name.trim())||'';
+}
+
+function exportSlug(){
+  const n=diagName();
+  if(!n)return 'eudr-strom';
+  return n.toLowerCase().replace(/[^a-z0-9\u00c0-\u024f]+/gi,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function nodeEntries(){return Object.entries(tree).filter(([k])=>!k.startsWith('_'));}
+function nodeIds(){return Object.keys(tree).filter(k=>!k.startsWith('_'));}
+function fields(){return tree._fields||[];}
+function eh(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ea(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+// Hex → rgba string for btn color derivation
+function hexRgba(hex,a){
+  hex=hex.replace('#','');
+  if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  if(isNaN(r))return `rgba(40,120,50,${a})`;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ══════════════════════════════════════════════
+// LAYOUT
+// ══════════════════════════════════════════════
+function autoLayout(){
+  const lvls={},seen=new Set(),ids=nodeIds();
+  const root=ids.includes('start')?'start':ids[0];
+  if(!root)return;
+  const q=[{id:root,l:0}];seen.add(root);
+  while(q.length){
+    const{id,l}=q.shift();
+    if(!lvls[l])lvls[l]=[];
+    lvls[l].push(id);
+    if(tree[id])for(const tv of Object.values(tree[id].answers||{}))
+      if(!seen.has(tv)&&tree[tv]){seen.add(tv);q.push({id:tv,l:l+1});}
+  }
+  const CW=295,RH=200;pos={};
+  for(const[l,nids]of Object.entries(lvls)){
+    const sy=700-nids.length*RH/2;
+    nids.forEach((id,i)=>pos[id]={x:80+ +l*CW,y:sy+i*RH});
+  }
+  let oy=60;
+  for(const id of ids)if(!pos[id]){pos[id]={x:60,y:oy};oy+=180;}
+}
+
+function nodeH(id){
+  const n=tree[id];if(!n)return NH+NBP*2+ADDH;
+  return NH+NBP*2+Object.keys(n.answers||{}).length*ANH+ADDH;
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function renderAll(){renderCanvas();renderJSONArea();renderPreview();renderNED();}
+
+const CT=document.getElementById('canvas-transform');
+const SVG=document.getElementById('svg-layer');
+
+function renderCanvas(){
+  CT.querySelectorAll('.node').forEach(n=>n.remove());
+  for(const[id,d]of nodeEntries())CT.appendChild(mkNode(id,d,pos[id]||{x:100,y:100}));
+  renderArrows();
+}
+
+function mkNode(id,d,p){
+  const isS=id==='start',isT=!Object.keys(d.answers||{}).length,isSel=id===selId;
+  const el=document.createElement('div');
+  el.className='node'+(isS?' nstart':'')+(isT?' nterm':'')+(isSel?' selected':'');
+  el.dataset.id=id;
+  el.style.cssText=`left:${p.x}px;top:${p.y}px`;
+
+  const title=d.title||'';
+  // Answers shown as colored dot + text label, not pills
+  const ansHtml=Object.entries(d.answers||{}).map(([a,tv],i)=>{
+    const c=C[i%C.length];
+    return `<div class="nans"><div class="ndot" style="background:${c}"></div><div class="nans-label" style="color:${c}" title="${ea(a)} → ${ea(tv)}">${eh(a)}</div></div>`;
+  }).join('');
+
+  const badge=(isS?'▶ START — ':'')+(isT?'● VÝSLEDEK — ':'')+id;
+  el.innerHTML=`
+    <div class="nhead">
+      <div class="nbadge">${badge}</div>
+      <div class="ntitle${!title?' empty':''}">${eh(title)||'(bez názvu)'}</div>
+    </div>
+    <div class="nbody">${ansHtml}<div class="nadd" data-addans="${id}">＋ odpověď</div></div>`;
+
+  el.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;e.stopPropagation();
+    if(e.target.closest('[data-addans]')){quickAdd(id);return;}
+    selectNode(id);
+    // FIX: read current position from pos[] directly, not from closure p
+    const cur=pos[id]||{x:0,y:0};
+    _drag={type:'node',id,sx:e.clientX,sy:e.clientY,nx:cur.x,ny:cur.y};
+    CT.style.cursor='grabbing';
+  });
+  return el;
+}
+
+function renderArrows(){
+  while(SVG.firstChild)SVG.removeChild(SVG.firstChild);
+  const defs=svgel('defs');SVG.appendChild(defs);
+  for(const[sid,d]of nodeEntries()){

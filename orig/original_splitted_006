@@ -1,0 +1,241 @@
+  document.getElementById('dlg-id').value='';
+  document.getElementById('dlg-name').value='';
+  document.getElementById('dlg').classList.add('open');
+  setTimeout(()=>document.getElementById('dlg-id').focus(),50);
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('open');}
+function slugify(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');}
+function confirmAdd(){
+  let id=document.getElementById('dlg-id').value.trim().replace(/\s+/g,'-');
+  if(!id)id='uzel-'+Math.random().toString(36).slice(2,7);
+  if(tree[id]){notify(t('nExists'));return;}
+  tree[id]={title:document.getElementById('dlg-name').value.trim(),description:'',answers:{}};
+  const wrap=document.getElementById('canvas-wrap');
+  const cx=(wrap.clientWidth/2-tf.x)/tf.s,cy=(wrap.clientHeight/2-tf.y)/tf.s;
+  pos[id]={x:cx-NW/2+(Math.random()-.5)*100,y:cy-60+(Math.random()-.5)*100};
+  closeDlg();renderCanvas();selectNode(id);renderJSONArea();renderPreview();
+  notify(t('nCreated')+' "'+id+'"');
+}
+document.getElementById('dlg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDlg();});
+document.getElementById('dlg-name').addEventListener('keydown',e=>{if(e.key==='Enter')confirmAdd();});
+
+// ══════════════════════════════════════════════
+// JSON
+// ══════════════════════════════════════════════
+function treeWithMeta(inclPos){
+  const out=JSON.parse(JSON.stringify(tree));
+  out._template={colors:tmpl.colors,_qTpl:tmpl._qTpl,_rTpl:tmpl._rTpl};
+  if(inclPos)out._positions=JSON.parse(JSON.stringify(pos));
+  return out;
+}
+
+function loadMeta(p){
+  if(p._template){
+    const m=p._template;
+    if(m.colors&&typeof m.colors==='object'){
+      for(const k of Object.keys(tmpl.colors))if(m.colors[k])tmpl.colors[k]=m.colors[k];
+    }
+    if(typeof m._qTpl==='string')tmpl._qTpl=m._qTpl;
+    if(typeof m._rTpl==='string')tmpl._rTpl=m._rTpl;
+  }
+  // Restore positions if present
+  if(p._positions&&typeof p._positions==='object'){
+    for(const[id,p2]of Object.entries(p._positions))
+      if(typeof p2.x==='number')pos[id]=p2;
+  }
+  // Restore diagram name
+  const nm=document.getElementById('diag-name');
+  if(nm)nm.value=typeof p._name==='string'?p._name:'';
+}
+
+function renderJSONArea(){
+  if(_jpause)return;
+  const ta=document.getElementById('json-area');
+  ta.value=JSON.stringify(treeWithMeta(false),null,2);
+  ta.classList.remove('err');
+}
+
+document.getElementById('json-area').addEventListener('input',function(){
+  if(_jpause)return;
+  try{
+    const p=JSON.parse(this.value);this.classList.remove('err');
+    _jpause=true;tree=p;loadMeta(p);
+    for(const id of nodeIds())if(!pos[id])pos[id]={x:100+Math.random()*400,y:100+Math.random()*400};
+    renderCanvas();renderPreview();renderNED();
+    if(document.querySelector('.pane[data-tab="template"].active'))renderTplTab();
+    _jpause=false;
+  }catch{this.classList.add('err');}
+});
+
+function applyJSON(){
+  const ta=document.getElementById('json-area');
+  try{
+    const p=JSON.parse(ta.value);_jpause=true;tree=p;loadMeta(p);
+    for(const id of nodeIds())if(!pos[id])pos[id]={x:100+Math.random()*400,y:100+Math.random()*400};
+    renderCanvas();renderPreview();renderNED();renderTplTab();_jpause=false;
+    ta.classList.remove('err');notify(t('nJsonApplied'));
+  }catch{ta.classList.add('err');notify(t('nJsonBad'));}
+}
+
+function fmtJSON(){
+  const ta=document.getElementById('json-area');
+  try{ta.value=JSON.stringify(JSON.parse(ta.value),null,2);ta.classList.remove('err');}
+  catch{notify(t('nJsonFmt'));}
+}
+
+function copyJSON(){
+  navigator.clipboard.writeText(JSON.stringify(treeWithMeta(false),null,2)).then(()=>notify(t('nJsonCopied')));
+}
+
+// ══════════════════════════════════════════════
+// TEMPLATE EDITOR
+// ══════════════════════════════════════════════
+function renderTplTab(){
+  const flds=fields();
+  const colorDefs=[
+    {key:'bg',    label:t('colorsBg')},
+    {key:'title', label:t('colorsTitle')},
+    {key:'text',  label:t('colorsText')},
+    {key:'btn',   label:t('colorsBtn')},
+  ];
+
+  const colorRows=colorDefs.map(({key,label})=>`
+    <div class="cvar-row">
+      <span class="cvar-label">${label}</span>
+      <input type="color" value="${tmpl.colors[key]}"
+        oninput="setColor('${key}',this.value,true)">
+      <input type="text" class="cvar-hex" id="chex-${key}" value="${tmpl.colors[key]}"
+        oninput="setColor('${key}',this.value,false)"
+        placeholder="#rrggbb">
+    </div>`).join('');
+
+  const fieldRows=flds.map((f,i)=>`
+    <div class="tfield-row">
+      <input class="tfield-id" value="${ea(f.id)}" placeholder="id-pole"
+        onchange="setFieldId(${i},this.value)">
+      <input value="${ea(f.label)}" placeholder="Popis pole…"
+        onchange="setFieldLabel(${i},this.value)">
+      <button class="tfield-del" onclick="delField(${i})">×</button>
+    </div>`).join('');
+
+  const allToks=['title','description',...flds.map(f=>f.id),'{diagram-name}'];
+  const tokChips=toks=>toks.map(tk=>`<span class="tok" onclick="copyTok(this,'${tk}')">${tk.startsWith('{')?tk:'{'+tk+'}'}</span>`).join('');
+  const qToks=['title','description','answers',...flds.map(f=>f.id),'diagram-name'];
+  const rToks=['title','description',...flds.map(f=>f.id),'diagram-name'];
+
+  document.getElementById('tpl-ed').innerHTML=`
+    <div class="tsec">
+      <div class="tsec-head">Barvy výstupní stránky<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('colorsDesc')}</div>
+      ${colorRows}
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('customFieldsLbl')}<div class="tsec-line"></div>
+        <button class="tsec-add" onclick="addField()">${t('addField')}</button>
+      </div>
+      <div class="tsec-desc">${t('customFieldsDesc')}</div>
+      ${fieldRows||`<div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);padding:3px 0">${t('noFields')}</div>`}
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('qTplTitle')}<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('tokenHint')}</div>
+      <div class="tokens">${tokChips(qToks)}</div>
+      <textarea class="ttpl" id="tpl-q" rows="5"
+        oninput="tmpl._qTpl=this.value;renderPreview()">${eh(tmpl._qTpl)}</textarea>
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('rTplTitle')}<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('tokenHint')}</div>
+      <div class="tokens">${tokChips(rToks)}</div>
+      <textarea class="ttpl" id="tpl-r" rows="5"
+        oninput="tmpl._rTpl=this.value;renderPreview()">${eh(tmpl._rTpl)}</textarea>
+    </div>
+  `;
+}
+
+function copyTok(el,tok){
+  const full=tok.startsWith('{')?tok:`{${tok}}`;
+  navigator.clipboard.writeText(full).then(()=>notify('Zkopírováno: '+full));
+}
+
+function setColor(key,v,fromPicker){
+  tmpl.colors[key]=v;
+  if(fromPicker){
+    const hex=document.getElementById('chex-'+key);
+    if(hex)hex.value=v;
+  }
+  renderPreview();
+}
+
+function addField(){
+  if(!tree._fields)tree._fields=[];
+  tree._fields.push({id:'pole-'+Math.random().toString(36).slice(2,5),label:'Nové pole'});
+  renderTplTab();renderNED();renderJSONArea();renderPreview();
+}
+function setFieldId(i,v){
+  const f=fields();if(!f[i])return;
+  f[i].id=v.toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  renderTplTab();renderNED();renderJSONArea();renderPreview();
+}
+function setFieldLabel(i,v){
+  const f=fields();if(!f[i])return;
+  f[i].label=v;renderTplTab();renderNED();renderJSONArea();
+}
+function delField(i){
+  const f=fields();if(!f[i])return;
+  f.splice(i,1);
+  if(!f.length)delete tree._fields;
+  renderTplTab();renderNED();renderJSONArea();renderPreview();
+}
+
+// ══════════════════════════════════════════════
+// HTML GENERATION
+// ══════════════════════════════════════════════
+function genHTML(){
+  const flds=fields();
+  const entries=nodeEntries();
+  const firstId=entries.some(([k])=>k==='start')?'start':(entries[0]?.[0]||'start');
+  const c=tmpl.colors;
+  const diagN=diagName();
+
+  // Derive button variants from btn color
+  const rootVars=`
+  --bg: ${c.bg};
+  --h2: ${c.title};
+  --text: ${c.text};
+  --sub: ${c.text};
+  --res: ${c.title};
+  --rsub: ${c.text};
+  --btn-fg: ${c.btn};
+  --btn-bg: ${hexRgba(c.btn,0.1)};
+  --btn-bdr: ${hexRgba(c.btn,0.3)};
+  --btn-hov: ${hexRgba(c.btn,0.22)};`;
+
+  const slides=entries.map(([id,nd])=>{
+    const ansl=Object.entries(nd.answers||{}),isTerm=!ansl.length;
+    const answersHTML=ansl.map(([a,tv])=>`<button class="btn" onclick="go('${tv}')">${eh(a)}</button>`).join('');
+    let tpl=isTerm?tmpl._rTpl:tmpl._qTpl;
+    tpl=tpl.replace(/\{title\}/g,eh(nd.title||id))
+           .replace(/\{description\}/g,eh(nd.description||''))
+           .replace(/\{diagram-name\}/g,eh(diagN));
+    if(!isTerm)tpl=tpl.replace(/\{answers\}/g,answersHTML);
+    for(const f of flds)tpl=tpl.replace(new RegExp(`\\{${f.id}\\}`,'g'),eh(nd[f.id]||''));
+    return `<div class="slide" id="slide-${id}">\n${tpl}\n</div>`;
+  }).join('\n');
+
+  const htmlTitle=diagN?`${diagN} — EUDR`:'EUDR — Rozhodovací strom';
+
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${eh(htmlTitle)}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{${rootVars}
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}

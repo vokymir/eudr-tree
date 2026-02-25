@@ -1,0 +1,234 @@
+    const sp=pos[sid];if(!sp)continue;
+    Object.entries(d.answers||{}).forEach(([ans,tid],i)=>{
+      const tp=pos[tid];if(!tp)return;
+      const c=C[i%C.length],th=nodeH(tid);
+      const sx=sp.x+NW,sy=sp.y+NH+NBP+i*ANH+ANH/2;
+      const tx=tp.x,ty=tp.y+th/2;
+      const dist=Math.abs(tx-sx),bend=Math.max(65,dist*0.42);
+      const mid=`arr_${sid}_${i}`.replace(/[^a-z0-9_]/g,'_');
+      const mk=svgel('marker');
+      mk.setAttribute('id',mid);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','6');
+      mk.setAttribute('refX','7');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');
+      const pl=svgel('polygon');pl.setAttribute('points','0 0, 8 3, 0 6');pl.setAttribute('fill',c);
+      mk.appendChild(pl);defs.appendChild(mk);
+      const path=svgel('path');
+      path.setAttribute('d',`M${sx} ${sy} C${sx+bend} ${sy},${tx-bend} ${ty},${tx} ${ty}`);
+      path.setAttribute('stroke',c);path.setAttribute('stroke-width','1.8');
+      path.setAttribute('fill','none');path.setAttribute('opacity','0.6');
+      path.setAttribute('marker-end',`url(#${mid})`);
+      SVG.appendChild(path);
+      // No labels on edges — arrow color is enough distinction
+    });
+  }
+}
+
+function svgel(t2){return document.createElementNS('http://www.w3.org/2000/svg',t2);}
+function applyTF(){
+  CT.style.transform=`translate(${tf.x}px,${tf.y}px) scale(${tf.s})`;
+  document.getElementById('zlbl').textContent=Math.round(tf.s*100)+'%';
+}
+
+// ══════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════
+function setupEvents(){
+  const wrap=document.getElementById('canvas-wrap');
+  const rp=document.getElementById('right-panel');
+  const resizer=document.getElementById('resizer');
+
+  wrap.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    if(!e.target.closest('.node')){
+      _drag={type:'canvas',sx:e.clientX,sy:e.clientY,tx:tf.x,ty:tf.y};
+      wrap.style.cursor='grabbing';
+      if(selId){selId=null;document.querySelectorAll('.node.selected').forEach(n=>n.classList.remove('selected'));renderNED();}
+    }
+  });
+
+  resizer.addEventListener('mousedown',e=>{
+    _resizing=true;_resX=e.clientX;_resW=rp.offsetWidth;
+    resizer.classList.add('dragging');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(_drag){
+      if(_drag.type==='node'){
+        const dx=(e.clientX-_drag.sx)/tf.s,dy=(e.clientY-_drag.sy)/tf.s;
+        const nx=_drag.nx+dx,ny=_drag.ny+dy;
+        pos[_drag.id]={x:nx,y:ny};
+        const el=CT.querySelector(`.node[data-id="${_drag.id}"]`);
+        if(el){el.style.left=nx+'px';el.style.top=ny+'px';}
+        renderArrows();
+      }else{
+        tf.x=_drag.tx+(e.clientX-_drag.sx);
+        tf.y=_drag.ty+(e.clientY-_drag.sy);
+        applyTF();
+      }
+    }
+    if(_resizing){
+      const delta=_resX-e.clientX;
+      rp.style.width=Math.max(280,Math.min(740,_resW+delta))+'px';
+    }
+  });
+
+  document.addEventListener('mouseup',()=>{
+    _drag=null;
+    wrap.style.cursor='';
+    CT.style.cursor='';
+    if(_resizing){
+      _resizing=false;
+      resizer.classList.remove('dragging');
+      document.body.style.cursor='';
+      document.body.style.userSelect='';
+    }
+  });
+
+  wrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const f=e.deltaY<0?1.12:0.9,ns=Math.min(3,Math.max(0.15,tf.s*f));
+    const r=wrap.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    tf.x=mx-(mx-tf.x)*(ns/tf.s);tf.y=my-(my-tf.y)*(ns/tf.s);tf.s=ns;applyTF();
+  },{passive:false});
+}
+
+function zoomBy(f){tf.s=Math.min(3,Math.max(0.15,tf.s*f));applyTF();}
+
+function fitView(){
+  const wrap=document.getElementById('canvas-wrap'),ids=Object.keys(pos);
+  if(!ids.length)return;
+  let mx=Infinity,my=Infinity,Mx=-Infinity,My=-Infinity;
+  for(const id of ids){const p=pos[id],h=nodeH(id);mx=Math.min(mx,p.x);my=Math.min(my,p.y);Mx=Math.max(Mx,p.x+NW);My=Math.max(My,p.y+h);}
+  const W=wrap.clientWidth,H=wrap.clientHeight,pd=70;
+  tf.s=Math.min(1.6,Math.max(0.15,Math.min((W-pd*2)/(Mx-mx),(H-pd*2)/(My-my))));
+  tf.x=pd-mx*tf.s;tf.y=pd-my*tf.s;applyTF();
+}
+
+// ══════════════════════════════════════════════
+// SELECTION
+// ══════════════════════════════════════════════
+function selectNode(id){
+  selId=id;
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('selected',n.dataset.id===id));
+  renderNED();switchTab('editor');
+}
+
+// ══════════════════════════════════════════════
+// NODE EDITOR
+// ══════════════════════════════════════════════
+function renderNED(){
+  const el=document.getElementById('ned');
+  if(!selId||!tree[selId]){
+    const hint=t('clickEdit').replace('\n','<br>');
+    el.innerHTML=`<div class="neempty"><big>🌲</big>${hint}</div>`;
+    return;
+  }
+  const id=selId,nd=tree[id];
+  const ansl=Object.entries(nd.answers||{});
+  const allIds=nodeIds();
+  const flds=fields();
+
+  const customFldHtml=flds.length?`
+    <div class="nesec">${t('customFields')}<div class="nesec-line"></div></div>
+    ${flds.map(f=>`
+      <div class="neg">
+        <div class="nelabel">${eh(f.label)} <span class="ltok">{${f.id}}</span></div>
+        <input class="neinput" value="${ea(nd[f.id]||'')}" placeholder="${ea(f.label)}…"
+          onchange="uf('${id}','${f.id}',this.value)">
+      </div>`).join('')}`:'';
+
+  el.innerHTML=`
+    <div class="neg">
+      <div class="nelabel">${t('nid')}</div>
+      <input class="neinput" value="${ea(id)}" readonly>
+    </div>
+    <div class="neg">
+      <div class="nelabel">${t('ntitle')} <span class="ltok">{title}</span></div>
+      <input class="neinput" value="${ea(nd.title||'')}" placeholder="Otázka…"
+        oninput="uf('${id}','title',this.value)">
+    </div>
+    <div class="neg">
+      <div class="nelabel">${t('ndesc')} <span class="ltok">{description}</span></div>
+      <textarea class="netarea" placeholder="Doplňující popis…"
+        oninput="uf('${id}','description',this.value)">${eh(nd.description||'')}</textarea>
+    </div>
+    ${customFldHtml}
+    <div class="nesec">${t('answers')}<div class="nesec-line"></div></div>
+    <div id="ne-ans">
+      ${ansl.map(([a,tv],i)=>{
+        const c=C[i%C.length];
+        const opts=allIds.map(nid=>`<option value="${nid}"${nid===tv?' selected':''}>${nid}</option>`).join('');
+        return `<div class="acard">
+          <div class="nelabel" style="color:${c};margin-bottom:5px">${t('answer')} ${i+1}</div>
+          <div class="acard-top">
+            <div class="adot" style="background:${c}"></div>
+            <input class="neinput" style="flex:1" value="${ea(a)}" placeholder="Text odpovědi"
+              onchange="chAns('${id}',${i},this.value,null)">
+            <button class="adel" onclick="delAns('${id}',${i})">×</button>
+          </div>
+          <div class="nelabel" style="margin-top:5px">${t('leadsTo')}</div>
+          <select class="neselect" onchange="chAns('${id}',${i},null,this.value)">${opts}</select>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="addansbtn" onclick="addAns('${id}')">${t('addAns')}</button>
+    ${id!=='start'?`<button class="delnodebtn" onclick="delNode('${id}')">${t('delNode')} &quot;${id}&quot;</button>`:''}
+  `;
+}
+
+// ══════════════════════════════════════════════
+// TREE MUTATIONS
+// ══════════════════════════════════════════════
+function uf(id,f,v){
+  if(!tree[id])return;
+  tree[id][f]=v;
+  refreshNode(id);renderJSONArea();renderPreview();
+}
+
+function chAns(nid,idx,newT,newTgt){
+  if(!tree[nid])return;
+  const e=Object.entries(tree[nid].answers||{});
+  const[ot,og]=e[idx]||['',''];
+  const tv=newT!==null?newT:ot,tg=newTgt!==null?newTgt:og;
+  const f={};e.forEach(([k,v],i)=>{f[i===idx?tv:k]=i===idx?tg:v;});
+  tree[nid].answers=f;
+  refreshNode(nid);renderArrows();renderJSONArea();renderPreview();
+}
+
+function addAns(nid){
+  if(!tree[nid])return;
+  let tv='nová odpověď',n=2;
+  while(tree[nid].answers[tv])tv=`nová odpověď ${n++}`;
+  tree[nid].answers[tv]=nodeIds()[0]||nid;
+  refreshNode(nid);renderArrows();renderNED();renderJSONArea();renderPreview();
+}
+
+function quickAdd(nid){addAns(nid);selectNode(nid);}
+
+function delAns(nid,idx){
+  if(!tree[nid])return;
+  const e=Object.entries(tree[nid].answers||{}),f={};
+  e.forEach(([k,v],i)=>{if(i!==idx)f[k]=v;});
+  tree[nid].answers=f;
+  refreshNode(nid);renderArrows();renderNED();renderJSONArea();renderPreview();
+}
+
+function delNode(id){
+  if(id==='start'){notify(t('nCannotDel'));return;}
+  delete tree[id];delete pos[id];
+  for(const n of Object.values(tree))
+    if(n&&n.answers)for(const[k,v]of Object.entries(n.answers))if(v===id)delete n.answers[k];
+  if(selId===id)selId=null;
+  renderCanvas();renderNED();renderJSONArea();renderPreview();
+}
+
+function refreshNode(id){
+  const p=pos[id],old=CT.querySelector(`.node[data-id="${id}"]`);
+  if(old&&p&&tree[id])CT.replaceChild(mkNode(id,tree[id],p),old);
+}
+
+// ══════════════════════════════════════════════
+// ADD NODE DIALOG
+// ══════════════════════════════════════════════
+function showDlg(){
