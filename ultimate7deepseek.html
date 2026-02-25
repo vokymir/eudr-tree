@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EUDR Tvůrce — NLI (v2.1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+
+/* ===== THEMES ===== */
+body.light{
+  --bg:#f0f7ee; --surface:#ffffff; --surface2:#e8f4e4; --surface3:#ddeedd;
+  --border:#bdd8b0; --border2:#8abf7a; --border3:#cceabb;
+  --accent:#286e35; --accent2:#1d5227; --accent-glow:rgba(40,110,53,0.12);
+  --red:#b83030; --gold:#9a6208;
+  --text:#182818; --text-dim:#4e7454; --text-mid:#2e5c38;
+  --json-bg:#f4fdf0; --json-color:#1a5028;
+  --nhead:#f8fdf6;
+  --canvas-dot:rgba(120,170,110,0.3);
+  --shadow:rgba(0,60,20,0.07); --shadow-deep:rgba(0,50,15,0.16);
+  --input-bg:#ffffff; --select-bg:#ffffff;
+  --node-start-border:rgba(154,98,8,0.65); --node-start-head:rgba(154,98,8,0.05);
+  --node-term-border:rgba(40,110,53,0.55);  --node-term-head:rgba(40,110,53,0.05);
+  --scroll-thumb:#bdd8b0;
+}
+body.dark{
+  --bg:#040d05; --surface:#0a180a; --surface2:#101e10; --surface3:#162416;
+  --border:#183018; --border2:#265028; --border3:#122012;
+  --accent:#45b560; --accent2:#329a4a; --accent-glow:rgba(69,181,96,0.13);
+  --red:#ff5f7e; --gold:#ffd166;
+  --text:#b8ddb0; --text-dim:#386038; --text-mid:#5a9060;
+  --json-bg:#030a03; --json-color:#6ec882;
+  --nhead:#080e08;
+  --canvas-dot:rgba(18,40,18,0.98);
+  --shadow:rgba(0,0,0,0.4); --shadow-deep:rgba(0,0,0,0.7);
+  --input-bg:#0a180a; --select-bg:#0a180a;
+  --node-start-border:rgba(255,209,102,0.4); --node-start-head:rgba(255,209,102,0.04);
+  --node-term-border:rgba(69,181,96,0.45);  --node-term-head:rgba(69,181,96,0.04);
+  --scroll-thumb:#265028;
+}
+
+:root{--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;--node-w:224px;--r:10px;}
+
+body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none;transition:background .25s,color .25s;}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
+
+/* ===== HEADER ===== */
+header{height:54px;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;z-index:100;transition:background .25s,border-color .25s;}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.logo-icon{width:30px;height:30px;flex-shrink:0;}
+.logo-text{display:flex;flex-direction:column;line-height:1.2;}
+.logo-name{font-weight:800;font-size:1rem;letter-spacing:-0.02em;color:var(--accent);}
+.logo-sub{font-size:0.6rem;color:var(--text-dim);font-weight:400;font-family:var(--mono);}
+#diag-name-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+#diag-name{background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;padding:5px 10px;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--text);outline:none;width:200px;transition:border-color .15s;}
+#diag-name:focus{border-color:var(--accent);}
+#diag-name::placeholder{font-weight:400;color:var(--text-dim);}
+.h-sep{width:1px;height:24px;background:var(--border);margin:0 3px;flex-shrink:0;}
+.h-spacer{flex:1}
+.hbtn{padding:6px 13px;border-radius:7px;font-family:var(--mono);font-size:0.73rem;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text-mid);transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1;}
+.hbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.hbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+.hbtn.primary:hover{background:var(--accent2);}
+.hbtn.grn{color:var(--accent);border-color:var(--border2);}
+.hbtn.grn:hover{background:var(--accent-glow);border-color:var(--accent);}
+.hbtn.amber{color:var(--gold);border-color:var(--border);}
+.hbtn.amber:hover{background:rgba(154,98,8,0.1);border-color:var(--gold);}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.95rem;transition:all .15s;flex-shrink:0;}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+
+/* ===== MAIN LAYOUT ===== */
+main{flex:1;display:flex;overflow:hidden;}
+#canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);background-image:radial-gradient(circle,var(--canvas-dot) 1px,transparent 1px);background-size:26px 26px;transition:background .25s;}
+#canvas-transform{position:absolute;top:0;left:0;width:7000px;height:7000px;transform-origin:0 0;}
+#svg-layer{position:absolute;top:0;left:0;width:7000px;height:7000px;pointer-events:none;overflow:visible;}
+#resizer{width:5px;flex-shrink:0;cursor:col-resize;background:var(--border);position:relative;transition:background .15s;}
+#resizer:hover,#resizer.dragging{background:var(--accent);}
+#right-panel{width:400px;min-width:280px;max-width:740px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);transition:background .25s;}
+.tabs{display:flex;border-bottom:1.5px solid var(--border);flex-shrink:0;overflow-x:auto;transition:border-color .25s;}
+.tabs::-webkit-scrollbar{height:0}
+.tab{padding:13px 13px;font-family:var(--mono);font-size:0.72rem;cursor:pointer;color:var(--text-dim);border-bottom:2.5px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0;letter-spacing:0.02em;}
+.tab:hover:not(.active){color:var(--text-mid);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500;}
+.pane{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.pane.active{display:flex;}
+
+/* ===== NODES (unchanged structure) ===== */
+.node{position:absolute;width:var(--node-w);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);cursor:grab;box-shadow:0 3px 14px var(--shadow);transition:border-color .12s,box-shadow .12s;}
+.node:hover{border-color:var(--border2);}
+.node.selected{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-glow),0 6px 20px var(--shadow-deep);}
+.node.nstart{border-color:var(--node-start-border);}
+.node.nstart .nhead{background:var(--node-start-head);}
+.node.nterm{border-color:var(--node-term-border);}
+.node.nterm .nhead{background:var(--node-term-head);}
+.nhead{padding:10px 10px 8px;border-bottom:1px solid var(--border);border-radius:calc(var(--r) - 1.5px) calc(var(--r) - 1.5px) 0 0;background:var(--nhead);transition:background .25s;}
+.nbadge{font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nstart .nbadge{color:var(--gold);opacity:.9;}
+.nterm  .nbadge{color:var(--accent);opacity:.9;}
+.ntitle{font-size:0.84rem;font-weight:600;line-height:1.35;word-break:break-word;}
+.ntitle.empty{color:var(--text-dim);font-weight:400;font-style:italic;}
+.nbody{padding:8px 8px 6px;}
+.nans{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.ndot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.nans-label{font-family:var(--mono);font-size:0.62rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;}
+.nadd{font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);cursor:pointer;padding:3px 2px;transition:color .12s;}
+.nadd:hover{color:var(--accent);}
+
+/* ===== NODE EDITOR (updated) ===== */
+#ned{flex:1;overflow-y:auto;padding:16px;user-select:text;-webkit-user-select:text;}
+.neempty{color:var(--text-dim);font-family:var(--mono);font-size:0.82rem;text-align:center;padding:60px 20px;line-height:2.4;}
+.neempty big{display:block;font-size:2.4rem;margin-bottom:8px;}
+.neg{margin-bottom:14px;}
+.nelabel{font-family:var(--mono);font-size:0.66rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.ltok{color:var(--accent);background:var(--accent-glow);border:1px solid rgba(40,110,53,0.25);border-radius:3px;padding:1px 5px;font-size:0.6rem;}
+body.dark .ltok{border-color:rgba(69,181,96,0.2);}
+.neinput,.neselect,.netarea{width:100%;background:var(--input-bg);border:1.5px solid var(--border);border-radius:6px;padding:8px 11px;font-family:var(--mono);font-size:0.84rem;color:var(--text);outline:none;transition:border-color .12s;}
+.neinput:focus,.neselect:focus,.netarea:focus{border-color:var(--accent);}
+.neinput[readonly]{color:var(--text-dim);cursor:default;background:var(--surface2);}
+.neselect{cursor:pointer;background:var(--select-bg);}
+.netarea{resize:vertical;min-height:56px;line-height:1.6;}
+.nesec{display:flex;align-items:center;margin:16px 0 10px;font-family:var(--mono);font-size:0.64rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;gap:8px;}
+.nesec-line{flex:1;height:1px;background:var(--border);}
+.acard{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
+.acard-top{display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.adot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.adel{width:26px;height:26px;border-radius:5px;border:1.5px solid transparent;background:transparent;color:var(--text-dim);cursor:pointer;font-size:1rem;flex-shrink:0;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+.adel:hover{border-color:var(--red);color:var(--red);background:rgba(184,48,48,0.1);}
+.addansbtn{width:100%;padding:9px;background:transparent;border:1.5px dashed var(--border2);border-radius:7px;color:var(--text-dim);font-family:var(--mono);font-size:0.76rem;cursor:pointer;transition:all .12s;margin-bottom:12px;}
+.addansbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.delnodebtn{width:100%;padding:9px;background:rgba(184,48,48,0.05);border:1.5px solid rgba(184,48,48,0.2);border-radius:7px;color:var(--red);font-family:var(--mono);font-size:0.76rem;cursor:pointer;transition:all .12s;margin-top:14px;}
+.delnodebtn:hover{background:rgba(184,48,48,0.12);border-color:var(--red);}
+/* summary + download */
+.summary-area{margin-top:12px;padding:10px;background:var(--surface3);border-radius:8px;}
+.summary-area .nelabel{margin-top:6px;}
+.check-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+.check-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);}
+
+/* ===== JSON, PREVIEW, TEMPLATE ===== */
+#json-area{flex:1;background:var(--json-bg);border:none;resize:none;font-family:var(--mono);font-size:0.8rem;line-height:1.7;color:var(--json-color);padding:14px 16px;outline:none;user-select:text;-webkit-user-select:text;transition:background .25s,color .25s;}
+#json-area.err{color:var(--red)!important;}
+.pfooter{padding:9px 11px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0;background:var(--surface);transition:background .25s,border-color .25s;flex-wrap:wrap;}
+#preview-frame{flex:1;border:none;background:#fff;}
+#tpl-ed{flex:1;overflow-y:auto;padding:16px;user-select:text;-webkit-user-select:text;}
+.tsec{margin-bottom:22px;}
+.tsec-head{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-family:var(--mono);font-size:0.64rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;}
+.tsec-line{flex:1;height:1px;background:var(--border);}
+.tsec-add{padding:3px 9px;border-radius:4px;font-family:var(--mono);font-size:0.66rem;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--text-dim);transition:all .12s;flex-shrink:0;}
+.tsec-add:hover{border-color:var(--accent);color:var(--accent);}
+.tsec-desc{font-family:var(--mono);font-size:0.67rem;color:var(--text-dim);margin-bottom:10px;line-height:1.7;}
+.cvar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cvar-label{font-family:var(--mono);font-size:0.73rem;color:var(--text);flex:1;min-width:0;}
+.cvar-row input[type=color]{width:34px;height:34px;padding:2px;cursor:pointer;flex-shrink:0;border:1.5px solid var(--border);border-radius:6px;background:var(--input-bg);}
+.cvar-hex{width:88px;flex-shrink:0;background:var(--input-bg);border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-family:var(--mono);font-size:0.74rem;color:var(--text);outline:none;transition:border-color .12s;}
+.cvar-hex:focus{border-color:var(--accent);}
+.tfield-row{display:flex;align-items:center;gap:5px;margin-bottom:7px;}
+.tfield-row input{background:var(--input-bg);border:1.5px solid var(--border);border-radius:5px;padding:6px 9px;font-family:var(--mono);font-size:0.75rem;color:var(--text);outline:none;transition:border-color .12s;flex:1;min-width:0;}
+.tfield-row input:focus{border-color:var(--accent);}
+.tfield-id{width:106px;flex-shrink:0;color:var(--accent)!important;flex:0 0 106px!important;}
+.tfield-del{width:24px;height:24px;border-radius:4px;border:1.5px solid transparent;background:transparent;color:var(--text-dim);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
+.tfield-del:hover{border-color:var(--red);color:var(--red);background:rgba(184,48,48,0.1);}
+.tokens{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;}
+.tok{font-family:var(--mono);font-size:0.66rem;color:var(--accent);background:var(--accent-glow);border:1px solid rgba(40,110,53,0.22);border-radius:4px;padding:3px 8px;cursor:pointer;user-select:all;-webkit-user-select:all;transition:background .12s;}
+body.dark .tok{border-color:rgba(69,181,96,0.2);}
+.tok:hover{background:rgba(40,110,53,0.18);}
+body.dark .tok:hover{background:rgba(69,181,96,0.18);}
+.tok.gold{color:var(--gold);background:rgba(154,98,8,0.08);border-color:rgba(154,98,8,0.2);}
+.ttpl{width:100%;min-height:94px;background:var(--json-bg);border:1.5px solid var(--border);border-radius:6px;padding:9px 11px;font-family:var(--mono);font-size:0.75rem;color:var(--json-color);outline:none;resize:vertical;line-height:1.65;transition:border-color .12s;}
+.ttpl:focus{border-color:var(--accent);}
+
+/* ===== CANVAS TOOLBAR ===== */
+#ctb{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--surface);border:1.5px solid var(--border);border-radius:40px;padding:7px 14px;display:flex;gap:5px;align-items:center;box-shadow:0 6px 30px var(--shadow-deep);z-index:50;transition:background .25s,border-color .25s;}
+.ctbsep{width:1px;height:18px;background:var(--border);margin:0 3px;}
+.ctbbtn{padding:6px 12px;border-radius:20px;font-family:var(--mono);font-size:0.7rem;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--text-mid);transition:all .12s;}
+.ctbbtn:hover{background:var(--surface2);border-color:var(--border);color:var(--text);}
+.ctbbtn.ac{background:var(--accent);color:#fff;border-color:var(--accent);}
+.ctbbtn.ac:hover{background:var(--accent2);}
+.zoomlbl{font-family:var(--mono);font-size:0.66rem;color:var(--text-dim);min-width:42px;text-align:center;}
+
+/* ===== NOTIFICATION ===== */
+#notif{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface);border:1.5px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:0.76rem;padding:8px 18px;border-radius:8px;opacity:0;transition:all .22s;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px var(--shadow-deep);}
+#notif.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===== MODALS ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;box-shadow:0 24px 80px var(--shadow-deep);width:100%;transition:background .25s;}
+#ob-modal .modal{max-width:560px;}
+.ob-head{padding:22px 24px 16px;border-bottom:1px solid var(--border);}
+.ob-logo{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.ob-logo-icon{width:36px;height:36px;}
+.ob-title{font-size:1.1rem;font-weight:800;color:var(--accent);}
+.ob-subtitle{font-size:0.76rem;color:var(--text-dim);font-family:var(--mono);}
+.ob-body{padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ob-card{background:var(--surface2);border:1px solid var(--border3);border-radius:9px;padding:12px 13px;}
+.ob-card-icon{font-size:1.5rem;margin-bottom:5px;}
+.ob-card-title{font-size:0.84rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.ob-card-text{font-size:0.76rem;color:var(--text-dim);line-height:1.65;font-family:var(--mono);}
+.ob-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+#dlg .modal{max-width:310px;padding:22px;}
+#dlg .modal h3{font-size:1rem;margin-bottom:14px;color:var(--text);}
+.dlgbtns{display:flex;gap:8px;margin-top:13px;justify-content:flex-end;}
+</style>
+</head>
+<body class="light">
+
+<header>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#143a1a"/>
+      <polygon points="16,4 7,17 12,17 9,26 23,26 20,17 25,17" fill="#4dcc80"/>
+      <rect x="14.5" y="24.5" width="3" height="3" rx="0.5" fill="#143a1a"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-name" id="logo-name">EUDR Tvůrce</span>
+      <span class="logo-sub" id="logo-sub">NLI · ČR</span>
+    </div>
+  </div>
+  <div class="h-sep"></div>
+  <div id="diag-name-wrap">
+    <input id="diag-name" type="text" placeholder="Název diagramu…" oninput="onDiagName(this.value)">
+  </div>
+  <div class="h-sep"></div>
+  <button class="hbtn"       id="btn-import"  onclick="importJSON()">⬆ Import</button>
+  <button class="hbtn grn"   id="btn-ejson"   onclick="exportJSON(false)">⬇ JSON</button>
+  <button class="hbtn grn"   id="btn-ejsonp"  onclick="exportJSON(true)" style="padding-left:8px;padding-right:8px;" title="Export JSON včetně pozic uzlů">⬇ JSON+P</button>
+  <button class="hbtn amber" id="btn-ehtml"   onclick="exportHTML()">⬇ HTML</button>
+  <div class="h-spacer"></div>
+  <button class="icon-btn" id="btn-ob"    onclick="showOB()"     title="Nápověda">?</button>
+  <button class="icon-btn" id="btn-lang"  onclick="toggleLang()" title="Jazyk" style="font-size:0.72rem;font-family:var(--mono);">EN</button>
+  <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="Světlý/tmavý">☀</button>
+  <div class="h-sep"></div>
+  <button class="hbtn primary" onclick="showDlg()">＋ <span id="lbl-addnode">Přidat uzel</span></button>
+</header>
+
+<main>
+  <div id="canvas-wrap">
+    <div id="canvas-transform"><svg id="svg-layer"></svg></div>
+    <div id="ctb">
+      <button class="ctbbtn ac" onclick="showDlg()">＋ <span id="lbl-node">Uzel</span></button>
+      <div class="ctbsep"></div>
+      <button class="ctbbtn" id="lbl-autolayout" onclick="resetLayout()">⟳ Auto-rozložení</button>
+      <button class="ctbbtn" id="lbl-fit"         onclick="fitView()">⊡ Přizpůsobit</button>
+      <div class="ctbsep"></div>
+      <button class="ctbbtn" onclick="zoomBy(0.87)">－</button>
+      <span class="zoomlbl" id="zlbl">100%</span>
+      <button class="ctbbtn" onclick="zoomBy(1.15)">＋</button>
+    </div>
+  </div>
+
+  <div id="resizer"></div>
+
+  <div id="right-panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="editor"   onclick="switchTab('editor')"   id="tab-editor">Editor uzlu</div>
+      <div class="tab"        data-tab="json"     onclick="switchTab('json')"     id="tab-json">JSON</div>
+      <div class="tab"        data-tab="template" onclick="switchTab('template')" id="tab-template">Šablona</div>
+      <div class="tab"        data-tab="preview"  onclick="switchTab('preview')"  id="tab-preview">Náhled</div>
+    </div>
+
+    <div class="pane active" data-tab="editor"><div id="ned"></div></div>
+
+    <div class="pane" data-tab="json">
+      <textarea id="json-area" spellcheck="false"></textarea>
+      <div class="pfooter">
+        <button class="hbtn" id="btn-jcopy"  onclick="copyJSON()">Kopírovat</button>
+        <button class="hbtn" id="btn-japply" onclick="applyJSON()">Použít</button>
+        <button class="hbtn" id="btn-jfmt"   onclick="fmtJSON()">Formátovat</button>
+      </div>
+    </div>
+
+    <div class="pane" data-tab="template"><div id="tpl-ed"></div></div>
+
+    <div class="pane" data-tab="preview">
+      <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+      <div class="pfooter">
+        <span id="lbl-preview" style="flex:1;font-family:var(--mono);font-size:0.72rem;color:var(--text-dim)">Živý náhled</span>
+        <button class="hbtn amber" onclick="exportHTML()" id="btn-ehtml2">⬇ Export</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ONBOARDING -->
+<div class="modal-overlay" id="ob-modal">
+  <div class="modal">
+    <div class="ob-head">
+      <div class="ob-logo">
+        <svg class="ob-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#143a1a"/><polygon points="16,4 7,17 12,17 9,26 23,26 20,17 25,17" fill="#4dcc80"/></svg>
+        <div><div class="ob-title" id="ob-title">EUDR Tvůrce — NLI</div><div class="ob-subtitle" id="ob-sub">Nástroj pro tvorbu rozhodovacích stromů</div></div>
+      </div>
+    </div>
+    <div class="ob-body" id="ob-body"></div>
+    <div class="ob-foot"><button class="hbtn primary" id="ob-close" onclick="closeOB()">Rozumím, začít pracovat</button></div>
+  </div>
+</div>
+
+<!-- ADD NODE DIALOG -->
+<div class="modal-overlay" id="dlg">
+  <div class="modal">
+    <h3 id="dlg-h">Nový uzel</h3>
+    <div class="neg">
+      <div class="nelabel" id="dlg-idlbl">ID uzlu (slug)</div>
+      <input class="neinput" id="dlg-id" placeholder="napr. moje-otazka" oninput="slugify(this)">
+    </div>
+    <div class="neg">
+      <div class="nelabel" id="dlg-namelbl">Název</div>
+      <input class="neinput" id="dlg-name" placeholder="Text otázky…">
+    </div>
+    <div class="dlgbtns">
+      <button class="hbtn" id="dlg-cancel" onclick="closeDlg()">Zrušit</button>
+      <button class="hbtn primary" id="dlg-create" onclick="confirmAdd()">Vytvořit</button>
+    </div>
+  </div>
+</div>
+
+<div id="notif"></div>
+
+<script>
+// ===== I18N (updated with new strings) =====
+let lang = 'cs';
+const S = {
+  cs:{
+    appName:'EUDR Tvůrce', appSub:'NLI · ČR', langBtn:'EN',
+    import:'⬆ Import', ejson:'⬇ JSON', ejsonp:'⬇ JSON+P', ehtml:'⬇ HTML',
+    addnode:'Přidat uzel', nodeBtn:'Uzel',
+    autoLayout:'⟳ Auto-rozložení', fit:'⊡ Přizpůsobit',
+    diagPlaceholder:'Název diagramu…',
+    tEditor:'Editor uzlu', tJson:'JSON', tTemplate:'Šablona', tPreview:'Náhled',
+    livePreview:'Živý náhled',
+    copy:'Kopírovat', apply:'Použít', format:'Formátovat',
+    clickEdit:'Klikněte na uzel\npro úpravy',
+    nid:'ID uzlu', ntitle:'Název / Otázka', ndesc:'Popis',
+    summary:'Shrnutí (volitelné)', downloadBtn:'Zobrazit tlačítko ke stažení',
+    customFields:'Vlastní pole', answers:'Odpovědi', answer:'Odpověď',
+    secondary:'Vedlejší',
+    addAns:'＋ Přidat odpověď', delNode:'⚠ Smazat uzel',
+    leadsTo:'→ vede k',
+    colorsBg:'Barva pozadí', colorsTitle:'Barva nadpisu', colorsText:'Barva textu',
+    colorsBtn:'Barva tlačítka (primární)', colorsBtnSec:'Barva tlačítka (vedlejší)',
+    colorsDesc:'Primární barva tlačítka; vedlejší barva je standardně šedá.',
+    customFieldsLbl:'Vlastní pole',
+    customFieldsDesc:'Přidejte libovolné datové pole ke každému uzlu (textarea).',
+    noFields:'Zatím žádná vlastní pole.',
+    addField:'＋ Přidat pole',
+    qTplTitle:'Šablona — otázkový slide',
+    rTplTitle:'Šablona — výsledkový slide',
+    tokenHint:'Dostupné tokeny (kliknutím zkopírujete):',
+    newNode:'Nový uzel', nodeIdSlug:'ID uzlu (slug)', titleLbl:'Název',
+    cancel:'Zrušit', create:'Vytvořit',
+    obTitle:'EUDR Tvůrce — NLI', obSub:'Nástroj pro tvorbu rozhodovacích stromů',
+    obClose:'Rozumím, začít pracovat',
+    obCards:[
+      {icon:'🖱',t:'Plátno',d:'Přidávejte uzly tlačítkem ＋. Tahem přesouvejte, kolečkem přibližujte. Kliknutím vyberete uzel k úpravě.'},
+      {icon:'📋',t:'Editor uzlu',d:'Nastavte název, popis, shrnutí a odpovědi. Každá odpověď může být primární nebo vedlejší.'},
+      {icon:'💾',t:'JSON export',d:'Uloží celý strom. JSON+P navíc ukládá pozice uzlů.'},
+      {icon:'🌐',t:'HTML export',d:'Vytvoří samostatnou mobilní stránku s podporou stahování shrnutí.'},
+      {icon:'🎨',t:'Šablona',d:'Upravte barvy a přidejte vlastní pole.'},
+      {icon:'🌳',t:'EUDR/NLÚR',d:'Nástroj pro due diligence v rámci nařízení EU o odlesňování.'},
+    ],
+    nJsonCopied:'JSON zkopírován ✓', nJsonApplied:'JSON použit ✓', nJsonBad:'Neplatný JSON',
+    nJsonFmt:'Nelze formátovat — neplatný JSON',
+    nJsonExp:'JSON exportován ✓', nJsonPExp:'JSON+Pozice exportován ✓',
+    nHtmlExp:'HTML exportováno ✓', nImported:'JSON importován ✓', nBadFile:'Neplatný soubor',
+    nLayoutReset:'Rozložení obnoveno ✓', nCannotDel:'⚠ Počáteční uzel nelze smazat',
+    nExists:'Uzel s tímto ID již existuje', nCreated:'Uzel vytvořen',
+    startTitle:'Úvodní otázka', startDesc:'', startAns:'Pokračovat →',
+    endTitle:'Výsledek', endDesc:'',
+    downloadSummary:'Stáhnout shrnutí',
+  },
+  en:{
+    appName:'EUDR Maker', appSub:'NLI · CZ', langBtn:'CS',
+    import:'⬆ Import', ejson:'⬇ JSON', ejsonp:'⬇ JSON+P', ehtml:'⬇ HTML',
+    addnode:'Add Node', nodeBtn:'Node',
+    autoLayout:'⟳ Auto-layout', fit:'⊡ Fit',
+    diagPlaceholder:'Diagram name…',
+    tEditor:'Node Editor', tJson:'JSON', tTemplate:'Template', tPreview:'Preview',
+    livePreview:'Live preview',
+    copy:'Copy', apply:'Apply', format:'Format',
+    clickEdit:'Click a node\nto select and edit',
+    nid:'Node ID', ntitle:'Title / Question', ndesc:'Description',
+    summary:'Summary (optional)', downloadBtn:'Show download button',
+    customFields:'Custom Fields', answers:'Answers', answer:'Answer',
+    secondary:'Secondary',
+    addAns:'＋ Add Answer', delNode:'⚠ Delete node',
+    leadsTo:'→ leads to',
+    colorsBg:'Background color', colorsTitle:'Heading color', colorsText:'Text color',
+    colorsBtn:'Button color (primary)', colorsBtnSec:'Button color (secondary)',
+    colorsDesc:'Primary button color; secondary is grayish by default.',
+    customFieldsLbl:'Custom Fields',
+    customFieldsDesc:'Add extra data fields to every node (textarea).',
+    noFields:'No custom fields yet.',
+    addField:'＋ Add Field',
+    qTplTitle:'Template — question slide',
+    rTplTitle:'Template — result slide',
+    tokenHint:'Available tokens (click to copy):',
+    newNode:'New Node', nodeIdSlug:'Node ID (slug)', titleLbl:'Title',
+    cancel:'Cancel', create:'Create',
+    obTitle:'EUDR Maker — NLI', obSub:'Decision tree authoring tool',
+    obClose:'Get started',
+    obCards:[
+      {icon:'🖱',t:'Canvas',d:'Add nodes with ＋. Drag to move, scroll to zoom. Click a node to edit.'},
+      {icon:'📋',t:'Node Editor',d:'Set title, description, summary, and answers. Each answer can be primary or secondary.'},
+      {icon:'💾',t:'JSON export',d:'Saves the full tree. JSON+P also includes canvas positions.'},
+      {icon:'🌐',t:'HTML export',d:'Generates a standalone mobile‑friendly page with summary downloads.'},
+      {icon:'🎨',t:'Template',d:'Customise colors and add custom fields.'},
+      {icon:'🌳',t:'EUDR',d:'Built to support due diligence under the EU Deforestation Regulation.'},
+    ],
+    nJsonCopied:'JSON copied ✓', nJsonApplied:'JSON applied ✓', nJsonBad:'Invalid JSON',
+    nJsonFmt:'Cannot format — invalid JSON',
+    nJsonExp:'JSON exported ✓', nJsonPExp:'JSON+Positions exported ✓',
+    nHtmlExp:'HTML exported ✓', nImported:'JSON imported ✓', nBadFile:'Invalid file',
+    nLayoutReset:'Layout reset ✓', nCannotDel:'⚠ Cannot delete the start node',
+    nExists:'Node ID already exists', nCreated:'Node created',
+    startTitle:'First question', startDesc:'', startAns:'Continue →',
+    endTitle:'Result', endDesc:'',
+    downloadSummary:'Download summary',
+  }
+};
+function t(k){ return S[lang][k] || k; }
+
+// ===== STATE =====
+let tree = {};
+let pos  = {};
+let selId = null;
+let _drag = null;
+let tf = {x:80,y:80,s:1};
+let _jpause = false;
+let _resizing = false, _resX = 0, _resW = 0;
+
+// Template colors (added btnSecondary)
+const tmpl = {
+  colors: {
+    bg:    '#f8fdf6',
+    title: '#1a3020',
+    text:  '#2c4830',
+    btn:   '#2a7a38',
+    btnSecondary: '#6c757d',
+  },
+  _qTpl: '<h2>{title}</h2>\n<p class="sub">{description}</p>\n<div class="ch">{answers}</div>',
+  _rTpl: '<div class="res">{title}</div>\n<p class="rsub">{description}</p>\n<button class="btn sec" onclick="go(\'start\')">&#x21A9; Zpět na začátek</button>',
+};
+
+const NW=224, NH=56, NBP=8, ANH=26, ADDH=26;
+const C=['#2e8a42','#c05830','#b09018','#2070b0','#8050b0',
+         '#b03060','#208878','#a06020','#405898','#608820',
+         '#a04870','#2868a8','#906018','#388858'];
+
+// ===== HELPERS =====
+function nodeEntries(){ return Object.entries(tree).filter(([k])=>!k.startsWith('_')); }
+function nodeIds(){ return Object.keys(tree).filter(k=>!k.startsWith('_')); }
+function fields(){ return tree._fields||[]; }
+function eh(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ea(s){return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function hexRgba(hex,a){
+  hex=hex.replace('#','');
+  if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  if(isNaN(r)) return `rgba(40,120,50,${a})`;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ===== NORMALIZE ANSWERS (convert old string format to {target, secondary}) =====
+function normalizeNodeAnswers(node) {
+  if (!node.answers) node.answers = {};
+  const newAns = {};
+  for (let [text, val] of Object.entries(node.answers)) {
+    if (typeof val === 'string') {
+      newAns[text] = { target: val, secondary: false };
+    } else if (val && typeof val === 'object') {
+      newAns[text] = { target: val.target || '', secondary: !!val.secondary };
+    } else {
+      newAns[text] = { target: '', secondary: false };
+    }
+  }
+  node.answers = newAns;
+}
+function normalizeTree() {
+  for (let id of nodeIds()) if (tree[id]) normalizeNodeAnswers(tree[id]);
+}
+
+// ===== INIT =====
+function makeDefault(){
+  return {
+    start:{title:t('startTitle'), description:t('startDesc'), summary:'', showDownload:false, answers:{[t('startAns')]:{target:'end',secondary:false}}},
+    end:  {title:t('endTitle'),   description:t('endDesc'),   summary:'', showDownload:false, answers:{}}
+  };
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  genFavicon();
+  tree = makeDefault();
+  normalizeTree();
+  autoLayout();
+  renderAll();
+  fitView(false);
+  setupEvents();
+  applyLang();
+  renderNED();
+  showOB();
+});
+function genFavicon(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0e2e14"/><polygon points="16,4 7,17 12,17 9,26 23,26 20,17 25,17" fill="#4dcc80"/><rect x="14.5" y="24" width="3" height="3.5" rx="0.5" fill="#0e2e14"/></svg>`;
+  const lnk=document.createElement('link');
+  lnk.rel='icon';lnk.type='image/svg+xml';
+  lnk.href='data:image/svg+xml;base64,'+btoa(svg);
+  document.head.appendChild(lnk);
+}
+
+// ===== THEME + LANG =====
+let _dark = false;
+function toggleTheme(){ _dark=!_dark; document.body.className=_dark?'dark':'light'; document.getElementById('btn-theme').textContent=_dark?'☽':'☀'; }
+function toggleLang(){ lang=lang==='cs'?'en':'cs'; applyLang(); }
+function applyLang(){
+  const s=S[lang];
+  document.documentElement.lang=lang;
+  document.getElementById('logo-name').textContent=s.appName;
+  document.getElementById('logo-sub').textContent=s.appSub;
+  document.getElementById('btn-lang').textContent=s.langBtn;
+  document.getElementById('btn-import').textContent=s.import;
+  document.getElementById('btn-ejson').textContent=s.ejson;
+  document.getElementById('btn-ejsonp').textContent=s.ejsonp;
+  document.getElementById('btn-ehtml').textContent=s.ehtml;
+  document.getElementById('lbl-addnode').textContent=s.addnode;
+  document.getElementById('lbl-node').textContent=s.nodeBtn;
+  document.getElementById('lbl-autolayout').textContent=s.autoLayout;
+  document.getElementById('lbl-fit').textContent=s.fit;
+  document.getElementById('tab-editor').textContent=s.tEditor;
+  document.getElementById('tab-json').textContent=s.tJson;
+  document.getElementById('tab-template').textContent=s.tTemplate;
+  document.getElementById('tab-preview').textContent=s.tPreview;
+  document.getElementById('lbl-preview').textContent=s.livePreview;
+  document.getElementById('btn-jcopy').textContent=s.copy;
+  document.getElementById('btn-japply').textContent=s.apply;
+  document.getElementById('btn-jfmt').textContent=s.format;
+  document.getElementById('dlg-h').textContent=s.newNode;
+  document.getElementById('dlg-idlbl').textContent=s.nodeIdSlug;
+  document.getElementById('dlg-namelbl').textContent=s.titleLbl;
+  document.getElementById('dlg-cancel').textContent=s.cancel;
+  document.getElementById('dlg-create').textContent=s.create;
+  document.getElementById('ob-title').textContent=s.obTitle;
+  document.getElementById('ob-sub').textContent=s.obSub;
+  document.getElementById('ob-close').textContent=s.obClose;
+  document.getElementById('diag-name').placeholder=s.diagPlaceholder;
+  document.getElementById('btn-ehtml2').textContent=s.ehtml;
+  document.getElementById('ob-body').innerHTML=s.obCards.map(c=>`
+    <div class="ob-card">
+      <div class="ob-card-icon">${c.icon}</div>
+      <div class="ob-card-title">${c.t}</div>
+      <div class="ob-card-text">${c.d}</div>
+    </div>`).join('');
+  renderNED();
+  if(document.querySelector('.pane[data-tab="template"].active')) renderTplTab();
+}
+
+// ===== ONBOARDING =====
+function showOB(){document.getElementById('ob-modal').classList.add('open');}
+function closeOB(){document.getElementById('ob-modal').classList.remove('open');}
+document.getElementById('ob-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOB();});
+
+// ===== DIAGRAM NAME =====
+function onDiagName(v){ tree._name = v.trim() || undefined; renderJSONArea(); renderPreview(); }
+function diagName(){ return (typeof tree._name==='string'&&tree._name.trim())||''; }
+function exportSlug(){
+  const n=diagName();
+  if(!n)return 'eudr-strom';
+  return n.toLowerCase().replace(/[^a-z0-9\u00c0-\u024f]+/gi,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+// ===== LAYOUT (original) =====
+function autoLayout(){
+  const lvls={},seen=new Set(),ids=nodeIds();
+  const root=ids.includes('start')?'start':ids[0];
+  if(!root)return;
+  const q=[{id:root,l:0}];seen.add(root);
+  while(q.length){
+    const{id,l}=q.shift();
+    if(!lvls[l])lvls[l]=[];
+    lvls[l].push(id);
+    if(tree[id])for(const tv of Object.values(tree[id].answers||{}))
+      if(!seen.has(tv.target)&&tree[tv.target]){seen.add(tv.target);q.push({id:tv.target,l:l+1});}
+  }
+  const CW=295,RH=200;pos={};
+  for(const[l,nids]of Object.entries(lvls)){
+    const sy=700-nids.length*RH/2;
+    nids.forEach((id,i)=>pos[id]={x:80+ +l*CW,y:sy+i*RH});
+  }
+  let oy=60;
+  for(const id of ids)if(!pos[id]){pos[id]={x:60,y:oy};oy+=180;}
+}
+function nodeH(id){
+  const n=tree[id];if(!n)return NH+NBP*2+ADDH;
+  return NH+NBP*2+Object.keys(n.answers||{}).length*ANH+ADDH;
+}
+
+// ===== RENDER =====
+const CT=document.getElementById('canvas-transform');
+const SVG=document.getElementById('svg-layer');
+function renderAll(){ renderCanvas(); renderJSONArea(); renderPreview(); renderNED(); }
+
+function renderCanvas(){
+  CT.querySelectorAll('.node').forEach(n=>n.remove());
+  for(const[id,d]of nodeEntries())CT.appendChild(mkNode(id,d,pos[id]||{x:100,y:100}));
+  renderArrows();
+}
+function mkNode(id,d,p){
+  const isS=id==='start',isT=!Object.keys(d.answers||{}).length,isSel=id===selId;
+  const el=document.createElement('div');
+  el.className='node'+(isS?' nstart':'')+(isT?' nterm':'')+(isSel?' selected':'');
+  el.dataset.id=id;
+  el.style.cssText=`left:${p.x}px;top:${p.y}px`;
+
+  const title=d.title||'';
+  const ansHtml=Object.entries(d.answers||{}).map(([a,obj],i)=>{
+    const c=C[i%C.length];
+    return `<div class="nans"><div class="ndot" style="background:${c}"></div><div class="nans-label" style="color:${c}" title="${ea(a)} → ${ea(obj.target)}">${eh(a)}</div></div>`;
+  }).join('');
+
+  const badge=(isS?'▶ START — ':'')+(isT?'● VÝSLEDEK — ':'')+id;
+  el.innerHTML=`
+    <div class="nhead">
+      <div class="nbadge">${badge}</div>
+      <div class="ntitle${!title?' empty':''}">${eh(title)||'(bez názvu)'}</div>
+    </div>
+    <div class="nbody">${ansHtml}<div class="nadd" data-addans="${id}">＋ odpověď</div></div>`;
+
+  el.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;e.stopPropagation();
+    if(e.target.closest('[data-addans]')){quickAdd(id);return;}
+    selectNode(id);
+    const cur=pos[id]||{x:0,y:0};
+    _drag={type:'node',id,sx:e.clientX,sy:e.clientY,nx:cur.x,ny:cur.y};
+    CT.style.cursor='grabbing';
+  });
+  return el;
+}
+function renderArrows(){
+  while(SVG.firstChild)SVG.removeChild(SVG.firstChild);
+  const defs=svgel('defs');SVG.appendChild(defs);
+  for(const[sid,d]of nodeEntries()){
+    const sp=pos[sid];if(!sp)continue;
+    Object.entries(d.answers||{}).forEach(([ans,obj],i)=>{
+      const tid=obj.target; if(!tid) return;
+      const tp=pos[tid]; if(!tp) return;
+      const c=C[i%C.length],th=nodeH(tid);
+      const sx=sp.x+NW,sy=sp.y+NH+NBP+i*ANH+ANH/2;
+      const tx=tp.x,ty=tp.y+th/2;
+      const dist=Math.abs(tx-sx),bend=Math.max(65,dist*0.42);
+      const mid=`arr_${sid}_${i}`.replace(/[^a-z0-9_]/g,'_');
+      const mk=svgel('marker');
+      mk.setAttribute('id',mid);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','6');
+      mk.setAttribute('refX','7');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');
+      const pl=svgel('polygon');pl.setAttribute('points','0 0, 8 3, 0 6');pl.setAttribute('fill',c);
+      mk.appendChild(pl);defs.appendChild(mk);
+      const path=svgel('path');
+      path.setAttribute('d',`M${sx} ${sy} C${sx+bend} ${sy},${tx-bend} ${ty},${tx} ${ty}`);
+      path.setAttribute('stroke',c);path.setAttribute('stroke-width','1.8');
+      path.setAttribute('fill','none');path.setAttribute('opacity','0.6');
+      path.setAttribute('marker-end',`url(#${mid})`);
+      SVG.appendChild(path);
+    });
+  }
+}
+function svgel(t2){ return document.createElementNS('http://www.w3.org/2000/svg',t2); }
+function applyTF(){ CT.style.transform=`translate(${tf.x}px,${tf.y}px) scale(${tf.s})`; document.getElementById('zlbl').textContent=Math.round(tf.s*100)+'%'; }
+
+// ===== EVENTS (original) =====
+function setupEvents(){
+  const wrap=document.getElementById('canvas-wrap');
+  const rp=document.getElementById('right-panel');
+  const resizer=document.getElementById('resizer');
+
+  wrap.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    if(!e.target.closest('.node')){
+      _drag={type:'canvas',sx:e.clientX,sy:e.clientY,tx:tf.x,ty:tf.y};
+      wrap.style.cursor='grabbing';
+      if(selId){selId=null;document.querySelectorAll('.node.selected').forEach(n=>n.classList.remove('selected'));renderNED();}
+    }
+  });
+
+  resizer.addEventListener('mousedown',e=>{
+    _resizing=true;_resX=e.clientX;_resW=rp.offsetWidth;
+    resizer.classList.add('dragging');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(_drag){
+      if(_drag.type==='node'){
+        const dx=(e.clientX-_drag.sx)/tf.s,dy=(e.clientY-_drag.sy)/tf.s;
+        const nx=_drag.nx+dx,ny=_drag.ny+dy;
+        pos[_drag.id]={x:nx,y:ny};
+        const el=CT.querySelector(`.node[data-id="${_drag.id}"]`);
+        if(el){el.style.left=nx+'px';el.style.top=ny+'px';}
+        renderArrows();
+      }else{
+        tf.x=_drag.tx+(e.clientX-_drag.sx);
+        tf.y=_drag.ty+(e.clientY-_drag.sy);
+        applyTF();
+      }
+    }
+    if(_resizing){
+      const delta=_resX-e.clientX;
+      rp.style.width=Math.max(280,Math.min(740,_resW+delta))+'px';
+    }
+  });
+
+  document.addEventListener('mouseup',()=>{
+    _drag=null;
+    wrap.style.cursor='';
+    CT.style.cursor='';
+    if(_resizing){
+      _resizing=false;
+      resizer.classList.remove('dragging');
+      document.body.style.cursor='';
+      document.body.style.userSelect='';
+    }
+  });
+
+  wrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const f=e.deltaY<0?1.12:0.9,ns=Math.min(3,Math.max(0.15,tf.s*f));
+    const r=wrap.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    tf.x=mx-(mx-tf.x)*(ns/tf.s);tf.y=my-(my-tf.y)*(ns/tf.s);tf.s=ns;applyTF();
+  },{passive:false});
+}
+function zoomBy(f){ tf.s=Math.min(3,Math.max(0.15,tf.s*f)); applyTF(); }
+function fitView(){
+  const wrap=document.getElementById('canvas-wrap'),ids=Object.keys(pos);
+  if(!ids.length)return;
+  let mx=Infinity,my=Infinity,Mx=-Infinity,My=-Infinity;
+  for(const id of ids){const p=pos[id],h=nodeH(id);mx=Math.min(mx,p.x);my=Math.min(my,p.y);Mx=Math.max(Mx,p.x+NW);My=Math.max(My,p.y+h);}
+  const W=wrap.clientWidth,H=wrap.clientHeight,pd=70;
+  tf.s=Math.min(1.6,Math.max(0.15,Math.min((W-pd*2)/(Mx-mx),(H-pd*2)/(My-my))));
+  tf.x=pd-mx*tf.s;tf.y=pd-my*tf.s;applyTF();
+}
+
+// ===== SELECTION =====
+function selectNode(id){
+  selId=id;
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('selected',n.dataset.id===id));
+  renderNED(); switchTab('editor');
+}
+
+// ===== NODE EDITOR (updated) =====
+function renderNED(){
+  const el=document.getElementById('ned');
+  if(!selId||!tree[selId]){
+    const hint=t('clickEdit').replace('\n','<br>');
+    el.innerHTML=`<div class="neempty"><big>🌲</big>${hint}</div>`;
+    return;
+  }
+  const id=selId, nd=tree[id];
+  const ansl=Object.entries(nd.answers||{});
+  const allIds=nodeIds();
+  const flds=fields();
+
+  const customFldHtml=flds.length?`
+    <div class="nesec">${t('customFields')}<div class="nesec-line"></div></div>
+    ${flds.map(f=>`
+      <div class="neg">
+        <div class="nelabel">${eh(f.label)} <span class="ltok">{${f.id}}</span></div>
+        <textarea class="netarea" rows="3" placeholder="${ea(f.label)}…"
+          oninput="uf('${id}','${f.id}',this.value)">${eh(nd[f.id]||'')}</textarea>
+      </div>`).join('')}`:'';
+
+  const summaryHtml = `
+    <div class="summary-area">
+      <div class="nelabel">${t('summary')}</div>
+      <textarea class="netarea" rows="3" placeholder="Doplňující shrnutí (volitelné)…"
+        oninput="uf('${id}','summary',this.value)">${eh(nd.summary||'')}</textarea>
+      <div class="check-row">
+        <input type="checkbox" id="showDown_${id}" ${nd.showDownload?'checked':''} onchange="uf('${id}','showDownload',this.checked)">
+        <label for="showDown_${id}">${t('downloadBtn')}</label>
+      </div>
+    </div>`;
+
+  el.innerHTML=`
+    <div class="neg">
+      <div class="nelabel">${t('nid')}</div>
+      <input class="neinput" value="${ea(id)}" readonly>
+    </div>
+    <div class="neg">
+      <div class="nelabel">${t('ntitle')} <span class="ltok">{title}</span></div>
+      <input class="neinput" value="${ea(nd.title||'')}" placeholder="Otázka…"
+        oninput="uf('${id}','title',this.value)">
+    </div>
+    <div class="neg">
+      <div class="nelabel">${t('ndesc')} <span class="ltok">{description}</span></div>
+      <textarea class="netarea" placeholder="Doplňující popis…"
+        oninput="uf('${id}','description',this.value)">${eh(nd.description||'')}</textarea>
+    </div>
+    ${summaryHtml}
+    ${customFldHtml}
+    <div class="nesec">${t('answers')}<div class="nesec-line"></div></div>
+    <div id="ne-ans">
+      ${ansl.map(([a,obj],i)=>{
+        const c=C[i%C.length];
+        const opts=allIds.map(nid=>`<option value="${nid}"${nid===obj.target?' selected':''}>${nid}</option>`).join('');
+        return `<div class="acard">
+          <div class="nelabel" style="color:${c};margin-bottom:5px">${t('answer')} ${i+1}</div>
+          <div class="acard-top">
+            <div class="adot" style="background:${c}"></div>
+            <input class="neinput" style="flex:1" value="${ea(a)}" placeholder="Text odpovědi"
+              onchange="chAnsText('${id}',${i},this.value)">
+            <button class="adel" onclick="delAns('${id}',${i})">×</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin:5px 0;">
+            <label style="display:flex; align-items:center; gap:4px; font-family:var(--mono); font-size:0.7rem;">
+              <input type="checkbox" ${obj.secondary?'checked':''} onchange="chAnsSecondary('${id}',${i},this.checked)"> ${t('secondary')}
+            </label>
+          </div>
+          <div class="nelabel" style="margin-top:5px">${t('leadsTo')}</div>
+          <select class="neselect" onchange="chAnsTarget('${id}',${i},this.value)">${opts}</select>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="addansbtn" onclick="addAns('${id}')">${t('addAns')}</button>
+    ${id!=='start'?`<button class="delnodebtn" onclick="delNode('${id}')">${t('delNode')} &quot;${id}&quot;</button>`:''}
+  `;
+}
+// Answer update helpers
+function chAnsText(id, idx, newText) {
+  const entries = Object.entries(tree[id].answers);
+  const oldKey = entries[idx][0];
+  const obj = entries[idx][1];
+  if (newText === oldKey) return;
+  delete tree[id].answers[oldKey];
+  tree[id].answers[newText] = obj;
+  refreshNode(id); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+}
+function chAnsTarget(id, idx, newTarget) {
+  const entries = Object.entries(tree[id].answers);
+  const key = entries[idx][0];
+  tree[id].answers[key].target = newTarget;
+  refreshNode(id); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+}
+function chAnsSecondary(id, idx, sec) {
+  const entries = Object.entries(tree[id].answers);
+  const key = entries[idx][0];
+  tree[id].answers[key].secondary = sec;
+  refreshNode(id); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+}
+function addAns(nid){
+  if(!tree[nid])return;
+  let tv='nová odpověď',n=2;
+  while(tree[nid].answers[tv])tv=`nová odpověď ${n++}`;
+  tree[nid].answers[tv] = { target: nodeIds()[0]||nid, secondary: false };
+  refreshNode(nid); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+}
+function quickAdd(nid){ addAns(nid); selectNode(nid); }
+function delAns(nid,idx){
+  if(!tree[nid])return;
+  const e=Object.entries(tree[nid].answers||{}),f={};
+  e.forEach(([k,v],i)=>{if(i!==idx)f[k]=v;});
+  tree[nid].answers=f;
+  refreshNode(nid); renderArrows(); renderNED(); renderJSONArea(); renderPreview();
+}
+function delNode(id){
+  if(id==='start'){notify(t('nCannotDel'));return;}
+  delete tree[id]; delete pos[id];
+  for(const n of Object.values(tree))
+    if(n&&n.answers)for(const[k,v]of Object.entries(n.answers))if(v.target===id)delete n.answers[k];
+  if(selId===id)selId=null;
+  renderCanvas(); renderNED(); renderJSONArea(); renderPreview();
+}
+function refreshNode(id){
+  const p=pos[id],old=CT.querySelector(`.node[data-id="${id}"]`);
+  if(old&&p&&tree[id])CT.replaceChild(mkNode(id,tree[id],p),old);
+}
+function uf(id,f,v){
+  if(!tree[id])return;
+  tree[id][f]=v;
+  refreshNode(id); renderJSONArea(); renderPreview();
+}
+
+// ===== ADD NODE DIALOG =====
+function showDlg(){
+  document.getElementById('dlg-id').value='';
+  document.getElementById('dlg-name').value='';
+  document.getElementById('dlg').classList.add('open');
+  setTimeout(()=>document.getElementById('dlg-id').focus(),50);
+}
+function closeDlg(){document.getElementById('dlg').classList.remove('open');}
+function slugify(inp){inp.value=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');}
+function confirmAdd(){
+  let id=document.getElementById('dlg-id').value.trim().replace(/\s+/g,'-');
+  if(!id)id='uzel-'+Math.random().toString(36).slice(2,7);
+  if(tree[id]){notify(t('nExists'));return;}
+  tree[id]={title:document.getElementById('dlg-name').value.trim(), description:'', summary:'', showDownload:false, answers:{}};
+  const wrap=document.getElementById('canvas-wrap');
+  const cx=(wrap.clientWidth/2-tf.x)/tf.s,cy=(wrap.clientHeight/2-tf.y)/tf.s;
+  pos[id]={x:cx-NW/2+(Math.random()-.5)*100,y:cy-60+(Math.random()-.5)*100};
+  closeDlg(); renderCanvas(); selectNode(id); renderJSONArea(); renderPreview();
+  notify(t('nCreated')+' "'+id+'"');
+}
+document.getElementById('dlg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDlg();});
+document.getElementById('dlg-name').addEventListener('keydown',e=>{if(e.key==='Enter')confirmAdd();});
+
+// ===== JSON =====
+function treeWithMeta(inclPos){
+  const out=JSON.parse(JSON.stringify(tree));
+  out._template={colors:tmpl.colors,_qTpl:tmpl._qTpl,_rTpl:tmpl._rTpl};
+  if(inclPos)out._positions=JSON.parse(JSON.stringify(pos));
+  return out;
+}
+function loadMeta(p){
+  if(p._template){
+    const m=p._template;
+    if(m.colors&&typeof m.colors==='object'){
+      for(const k of Object.keys(tmpl.colors))if(m.colors[k])tmpl.colors[k]=m.colors[k];
+    }
+    if(typeof m._qTpl==='string')tmpl._qTpl=m._qTpl;
+    if(typeof m._rTpl==='string')tmpl._rTpl=m._rTpl;
+  }
+  if(p._positions&&typeof p._positions==='object'){
+    for(const[id,p2]of Object.entries(p._positions))
+      if(typeof p2.x==='number')pos[id]=p2;
+  }
+  const nm=document.getElementById('diag-name');
+  if(nm)nm.value=typeof p._name==='string'?p._name:'';
+}
+function renderJSONArea(){
+  if(_jpause)return;
+  const ta=document.getElementById('json-area');
+  ta.value=JSON.stringify(treeWithMeta(false),null,2);
+  ta.classList.remove('err');
+}
+document.getElementById('json-area').addEventListener('input',function(){
+  if(_jpause)return;
+  try{
+    const p=JSON.parse(this.value);this.classList.remove('err');
+    _jpause=true;tree=p;normalizeTree();loadMeta(p);
+    for(const id of nodeIds())if(!pos[id])pos[id]={x:100+Math.random()*400,y:100+Math.random()*400};
+    renderCanvas();renderPreview();renderNED();
+    if(document.querySelector('.pane[data-tab="template"].active'))renderTplTab();
+    _jpause=false;
+  }catch{this.classList.add('err');}
+});
+function applyJSON(){
+  const ta=document.getElementById('json-area');
+  try{
+    const p=JSON.parse(ta.value);_jpause=true;tree=p;normalizeTree();loadMeta(p);
+    for(const id of nodeIds())if(!pos[id])pos[id]={x:100+Math.random()*400,y:100+Math.random()*400};
+    renderCanvas();renderPreview();renderNED();renderTplTab();_jpause=false;
+    ta.classList.remove('err');notify(t('nJsonApplied'));
+  }catch{ta.classList.add('err');notify(t('nJsonBad'));}
+}
+function fmtJSON(){
+  const ta=document.getElementById('json-area');
+  try{ta.value=JSON.stringify(JSON.parse(ta.value),null,2);ta.classList.remove('err');}
+  catch{notify(t('nJsonFmt'));}
+}
+function copyJSON(){
+  navigator.clipboard.writeText(JSON.stringify(treeWithMeta(false),null,2)).then(()=>notify(t('nJsonCopied')));
+}
+
+// ===== TEMPLATE TAB (updated with secondary color) =====
+function renderTplTab(){
+  const flds=fields();
+  const colorDefs=[
+    {key:'bg',    label:t('colorsBg')},
+    {key:'title', label:t('colorsTitle')},
+    {key:'text',  label:t('colorsText')},
+    {key:'btn',   label:t('colorsBtn')},
+    {key:'btnSecondary', label:t('colorsBtnSec')},
+  ];
+  const colorRows=colorDefs.map(({key,label})=>`
+    <div class="cvar-row">
+      <span class="cvar-label">${label}</span>
+      <input type="color" value="${tmpl.colors[key]}"
+        oninput="setColor('${key}',this.value,true)">
+      <input type="text" class="cvar-hex" id="chex-${key}" value="${tmpl.colors[key]}"
+        oninput="setColor('${key}',this.value,false)"
+        placeholder="#rrggbb">
+    </div>`).join('');
+  const fieldRows=flds.map((f,i)=>`
+    <div class="tfield-row">
+      <input class="tfield-id" value="${ea(f.id)}" placeholder="id-pole"
+        onchange="setFieldId(${i},this.value)">
+      <input value="${ea(f.label)}" placeholder="Popis pole…"
+        onchange="setFieldLabel(${i},this.value)">
+      <button class="tfield-del" onclick="delField(${i})">×</button>
+    </div>`).join('');
+  const allToks=['title','description','summary', ...flds.map(f=>f.id),'{diagram-name}'];
+  const tokChips=toks=>toks.map(tk=>`<span class="tok" onclick="copyTok(this,'${tk}')">${tk.startsWith('{')?tk:'{'+tk+'}'}</span>`).join('');
+  const qToks=['title','description','answers','summary', ...flds.map(f=>f.id),'diagram-name'];
+  const rToks=['title','description','summary', ...flds.map(f=>f.id),'diagram-name'];
+
+  document.getElementById('tpl-ed').innerHTML=`
+    <div class="tsec">
+      <div class="tsec-head">Barvy výstupní stránky<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('colorsDesc')}</div>
+      ${colorRows}
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('customFieldsLbl')}<div class="tsec-line"></div>
+        <button class="tsec-add" onclick="addField()">${t('addField')}</button>
+      </div>
+      <div class="tsec-desc">${t('customFieldsDesc')}</div>
+      ${fieldRows||`<div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);padding:3px 0">${t('noFields')}</div>`}
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('qTplTitle')}<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('tokenHint')}</div>
+      <div class="tokens">${tokChips(qToks)}</div>
+      <textarea class="ttpl" id="tpl-q" rows="5"
+        oninput="tmpl._qTpl=this.value;renderPreview()">${eh(tmpl._qTpl)}</textarea>
+    </div>
+
+    <div class="tsec">
+      <div class="tsec-head">${t('rTplTitle')}<div class="tsec-line"></div></div>
+      <div class="tsec-desc">${t('tokenHint')}</div>
+      <div class="tokens">${tokChips(rToks)}</div>
+      <textarea class="ttpl" id="tpl-r" rows="5"
+        oninput="tmpl._rTpl=this.value;renderPreview()">${eh(tmpl._rTpl)}</textarea>
+    </div>
+  `;
+}
+function copyTok(el,tok){ const full=tok.startsWith('{')?tok:`{${tok}}`; navigator.clipboard.writeText(full).then(()=>notify('Zkopírováno: '+full)); }
+function setColor(key,v,fromPicker){ tmpl.colors[key]=v; if(fromPicker){ const hex=document.getElementById('chex-'+key); if(hex)hex.value=v; } renderPreview(); }
+function addField(){ if(!tree._fields)tree._fields=[]; tree._fields.push({id:'pole-'+Math.random().toString(36).slice(2,5),label:'Nové pole'}); renderTplTab(); renderNED(); renderJSONArea(); renderPreview(); }
+function setFieldId(i,v){ const f=fields(); if(!f[i])return; f[i].id=v.toLowerCase().replace(/[^a-z0-9-]/g,'-'); renderTplTab(); renderNED(); renderJSONArea(); renderPreview(); }
+function setFieldLabel(i,v){ const f=fields(); if(!f[i])return; f[i].label=v; renderTplTab(); renderNED(); renderJSONArea(); }
+function delField(i){ const f=fields(); if(!f[i])return; f.splice(i,1); if(!f.length)delete tree._fields; renderTplTab(); renderNED(); renderJSONArea(); renderPreview(); }
+
+// ===== HTML GENERATION (updated) =====
+function genHTML(){
+  const flds=fields();
+  const entries=nodeEntries();
+  const firstId=entries.some(([k])=>k==='start')?'start':(entries[0]?.[0]||'start');
+  const c=tmpl.colors;
+  const diagN=diagName();
+
+  const rootVars=`
+  --bg: ${c.bg};
+  --h2: ${c.title};
+  --text: ${c.text};
+  --sub: ${c.text};
+  --res: ${c.title};
+  --rsub: ${c.text};
+  --btn-fg: ${c.btn};
+  --btn-bg: ${hexRgba(c.btn,0.1)};
+  --btn-bdr: ${hexRgba(c.btn,0.3)};
+  --btn-hov: ${hexRgba(c.btn,0.22)};
+  --btn-sec-fg: ${c.btnSecondary};
+  --btn-sec-bg: ${hexRgba(c.btnSecondary,0.1)};
+  --btn-sec-bdr: ${hexRgba(c.btnSecondary,0.3)};
+  --btn-sec-hov: ${hexRgba(c.btnSecondary,0.22)};`;
+
+  const slides=entries.map(([id,nd])=>{
+    const ansl=Object.entries(nd.answers||{}), isTerm=!ansl.length;
+    const answersHTML=ansl.map(([a,obj])=> {
+      const secClass = obj.secondary ? 'sec' : '';
+      return `<button class="btn ${secClass}" onclick="go('${obj.target}')">${eh(a)}</button>`;
+    }).join('');
+    let tpl=isTerm?tmpl._rTpl:tmpl._qTpl;
+    tpl=tpl.replace(/\{title\}/g, eh(nd.title||id))
+           .replace(/\{description\}/g, eh(nd.description||''))
+           .replace(/\{diagram-name\}/g, eh(diagN));
+    if(!isTerm) tpl = tpl.replace(/\{answers\}/g, answersHTML);
+    for(const f of flds) tpl = tpl.replace(new RegExp(`\\{${f.id}\\}`,'g'), eh(nd[f.id]||''));
+    tpl = tpl.replace(/\{summary\}/g, eh(nd.summary||''));
+
+    let downloadBtn = '';
+    if (nd.showDownload && nd.summary) {
+      downloadBtn = `<button class="btn sec" onclick="downloadSummary('${id}')">${t('downloadSummary')}</button>`;
+    }
+    return `<div class="slide" id="slide-${id}">\n${tpl}\n${downloadBtn}\n</div>`;
+  }).join('\n');
+
+  const summariesObj = {};
+  entries.forEach(([id,nd]) => { if(nd.summary) summariesObj[id] = nd.summary; });
+  const summariesJson = JSON.stringify(summariesObj);
+  const htmlTitle=diagN?`${diagN} — EUDR`:'EUDR — Rozhodovací strom';
+
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${eh(htmlTitle)}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{${rootVars}
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;padding:30px 20px;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s ease;overflow-y:auto; -webkit-overflow-scrolling:touch;}
+.slide.active{opacity:1;pointer-events:auto;}
+.slide h2, .slide .sub, .slide .res, .slide .rsub, .slide p, .slide .ch {
+  text-align: left;
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.sub, .rsub, .res, p { white-space: pre-wrap; }
+h2{font-size:clamp(1.3rem,3.5vw,2rem);font-weight:700;line-height:1.35;color:var(--h2);margin-bottom:0.2em;}
+.sub{color:var(--sub);line-height:1.8;font-size:1rem;}
+.ch{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start;margin-top:4px;}
+.btn{padding:13px 28px;background:var(--btn-bg);color:var(--btn-fg);border:1.5px solid var(--btn-bdr);border-radius:10px;font-size:1rem;cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600}
+.btn:hover{background:var(--btn-hov);border-color:var(--btn-fg);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.btn.sec{background:var(--btn-sec-bg);color:var(--btn-sec-fg);border-color:var(--btn-sec-bdr);}
+.btn.sec:hover{background:var(--btn-sec-hov);border-color:var(--btn-sec-fg);}
+.res{font-size:clamp(1.5rem,4.5vw,2.5rem);font-weight:700;color:var(--res);line-height:1.25;white-space:pre-wrap;}
+.rsub{color:var(--rsub);font-size:1rem;line-height:1.8;white-space:pre-wrap;}
+</style>
+</head>
+<body>
+${slides}
+<script>
+const summaries = ${summariesJson};
+const diagramName = ${JSON.stringify(diagN)};
+function go(id){
+  document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+  const el=document.getElementById('slide-'+id);
+  if(el) el.classList.add('active');
+}
+function downloadSummary(id) {
+  const text = summaries[id];
+  if (!text) return;
+  const blob = new Blob([text], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (diagramName ? diagramName + '-' : '') + id + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+go('${firstId}');
+<\/script>
+</body>
+</html>`;
+}
+function renderPreview(){ document.getElementById('preview-frame').srcdoc=genHTML(); }
+
+// ===== TABS =====
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
+  document.querySelectorAll('.pane').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
+  if(tab==='json')renderJSONArea();
+  if(tab==='template')renderTplTab();
+}
+
+// ===== EXPORT / IMPORT =====
+function exportJSON(withPos){
+  const slug=exportSlug();
+  const fname=withPos?`${slug}-pozice.json`:`${slug}.json`;
+  dl(new Blob([JSON.stringify(treeWithMeta(withPos),null,2)],{type:'application/json'}),fname);
+  notify(withPos?t('nJsonPExp'):t('nJsonExp'));
+}
+function exportHTML(){
+  dl(new Blob([genHTML()],{type:'text/html'}),`${exportSlug()}.html`);
+  notify(t('nHtmlExp'));
+}
+function dl(blob,name){
+  const u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
+function importJSON(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const parsed=JSON.parse(ev.target.result);
+        tree=parsed;
+        normalizeTree();  // <-- convert old answers
+        pos={};
+        autoLayout();
+        loadMeta(parsed);
+        renderAll();renderTplTab();fitView();
+        notify(t('nImported'));
+      }catch{notify(t('nBadFile'));}
+    };
+    r.readAsText(f);
+  };inp.click();
+}
+function resetLayout(){autoLayout();renderCanvas();fitView();notify(t('nLayoutReset'));}
+
+// ===== NOTIFICATION =====
+let _nt;
+function notify(m){
+  const el=document.getElementById('notif');
+  el.textContent=m;el.classList.add('show');
+  clearTimeout(_nt);_nt=setTimeout(()=>el.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
